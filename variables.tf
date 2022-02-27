@@ -22,3 +22,8 @@ variable "tf_repo_name" {
   type        = string
   description = "Cloud Source Repositories Terraform repository name"
 }
+
+variable "network_name" {
+  description = "Network name"
+  type        = string
+}

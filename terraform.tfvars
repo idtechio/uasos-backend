@@ -4,3 +4,5 @@ secondary_region = "europe-west3"
 project_number   = "55609607717"
 
 tf_repo_name = "gcp-infra"
+
+network_name           = "private-vpc"
