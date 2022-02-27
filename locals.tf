@@ -7,7 +7,8 @@ locals {
     "eventarc.googleapis.com",
     "iam.googleapis.com",
     "vpcaccess.googleapis.com",
-    "servicenetworking.googleapis.com"
+    "servicenetworking.googleapis.com",
+    "secretmanager.googleapis.com"
   ]
 
   secrets = [
