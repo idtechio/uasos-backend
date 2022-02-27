@@ -27,3 +27,23 @@ variable "network_name" {
   description = "Network name"
   type        = string
 }
+
+variable "subnet_name1" {
+  description = "Subnetwork name 1"
+  type        = string
+}
+
+variable "subnet_name2" {
+  description = "Subnetwork name 2"
+  type        = string
+}
+
+variable "subnet_name3" {
+  description = "Subnetwork name 3"
+  type        = string
+}
+
+variable "subnet_name4" {
+  description = "Subnetwork name 4"
+  type        = string
+}
