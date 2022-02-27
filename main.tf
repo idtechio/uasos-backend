@@ -21,3 +21,13 @@ resource "google_project_service" "project_services" {
   project  = var.project_id
   service  = each.key
 }
+
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
