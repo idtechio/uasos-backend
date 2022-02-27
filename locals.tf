@@ -27,6 +27,7 @@ locals {
     "EMAIL_SERVER_PASSWORD",
     "EMAIL_SERVER_HOST",
     "EMAIL_SERVER_PORT",
-    "EMAIL_FROM"
+    "EMAIL_FROM",
+    "SECRET"
   ]
 }
