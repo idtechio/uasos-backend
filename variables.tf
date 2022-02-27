@@ -47,3 +47,8 @@ variable "subnet_name4" {
   description = "Subnetwork name 4"
   type        = string
 }
+
+variable "vpc_access_connector_name" {
+  description = "vpc_access_connector_name"
+  type        = string
+}

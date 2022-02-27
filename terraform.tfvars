@@ -10,3 +10,5 @@ subnet_name1 = "private-subnetwork"
 subnet_name2 = "serverless-connector"
 subnet_name3 = "private-subnetwork-sec-region"
 subnet_name4 = "serverless-connector-sec-region"
+
+vpc_access_connector_name = "eu-central2-serverless"
