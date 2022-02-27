@@ -3,6 +3,7 @@
 # .tfstate files
 *.tfstate
 *.tfstate.*
+*.terraform.lock.hcl
 
 .idea/
 .vscode/
