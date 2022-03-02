@@ -28,6 +28,7 @@ locals {
     "EMAIL_SERVER_HOST",
     "EMAIL_SERVER_PORT",
     "EMAIL_FROM",
-    "SECRET"
+    "SECRET",
+    "NEXTAUTH_URL"
   ]
 }
