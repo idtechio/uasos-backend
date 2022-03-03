@@ -8,7 +8,8 @@ locals {
     "iam.googleapis.com",
     "vpcaccess.googleapis.com",
     "servicenetworking.googleapis.com",
-    "secretmanager.googleapis.com"
+    "secretmanager.googleapis.com",
+    "iap.googleapis.com"
   ]
 
   secrets = [
