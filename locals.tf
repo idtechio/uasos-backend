@@ -9,6 +9,7 @@ locals {
     "vpcaccess.googleapis.com",
     "servicenetworking.googleapis.com",
     "secretmanager.googleapis.com",
+    "sqladmin.googleapis.com",
     "iap.googleapis.com"
   ]
 
