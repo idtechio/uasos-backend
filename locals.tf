@@ -10,7 +10,8 @@ locals {
     "servicenetworking.googleapis.com",
     "secretmanager.googleapis.com",
     "sqladmin.googleapis.com",
-    "iap.googleapis.com"
+    "iap.googleapis.com",
+    "cloudscheduler.googleapis.com"
   ]
 
   secrets = [
@@ -31,6 +32,11 @@ locals {
     "EMAIL_SERVER_PORT",
     "EMAIL_FROM",
     "SECRET",
-    "NEXTAUTH_URL"
+    "NEXTAUTH_URL",
+    "POSTGRES_CREDENTIALS"
+  ]
+
+  gcf_secrets = [
+    "FUNCTIONS_CONFIGURATION_CONTEXT"
   ]
 }

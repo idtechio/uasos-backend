@@ -1,0 +1,4 @@
+google-cloud-pubsub==2.8.0
+python-dotenv==0.19.2
+google-cloud-secret-manager==2.8.0
+sendgrid==6.9.6
