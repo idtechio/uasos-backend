@@ -56,7 +56,7 @@ module "gcf_guests-insert" {
 
     environment_variables = {
         PROJECT_ID= "${var.project_id}",
-        DB_CONNECTION_NAME= google_sql_database_instance.master.connection_name
+        DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
         GUESTS_TABLE_NAME= "${var.gcf_guests-insert_guests_table_name}"
         GUEST_INITIAL_STATUS= "${var.gcf_guests-insert_guest_initial_status}"
         SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
@@ -80,7 +80,7 @@ module "gcf_matches-create" {
 
     environment_variables = {
         PROJECT_ID= "${var.project_id}",
-        DB_CONNECTION_NAME= google_sql_database_instance.master.connection_name
+        DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
         SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
     }
 }
@@ -102,7 +102,7 @@ module "gcf_change-status" {
 
     environment_variables = {
         PROJECT_ID= "${var.project_id}",
-        DB_CONNECTION_NAME= google_sql_database_instance.master.connection_name
+        DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
         SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
     }
 }
@@ -123,7 +123,7 @@ module "gcf_matches-create-notifications" {
 
     environment_variables = {
         PROJECT_ID= "${var.project_id}",
-        DB_CONNECTION_NAME= google_sql_database_instance.master.connection_name
+        DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
         SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
     }
 }
@@ -146,7 +146,7 @@ module "gcf_matches_process_rejections" {
 
   environment_variables = {
     PROJECT_ID= "${var.project_id}",
-    DB_CONNECTION_NAME= google_sql_database_instance.master.connection_name
+    DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
     SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
   }
 }
@@ -167,7 +167,7 @@ module "gcf_matches_process_timeout" {
 
   environment_variables = {
     PROJECT_ID= "${var.project_id}",
-    DB_CONNECTION_NAME= google_sql_database_instance.master.connection_name
+    DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
     SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
   }
 }
@@ -188,7 +188,7 @@ module "gcf_send_notification_email_channel" {
 
   environment_variables = {
     PROJECT_ID= "${var.project_id}",
-    DB_CONNECTION_NAME= google_sql_database_instance.master.connection_name
+    DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
     SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
   }
 }

@@ -16,7 +16,7 @@ vpc_access_connector_name = "eu-central2-serverless"
 ### Functions-specific
 
 gcf_secret_configuration_context = "FUNCTIONS_CONFIGURATION_CONTEXT"
-cloud_sql_instance_name = "sql-ukr-helper-test-iter-011"
+cloud_sql_instance_name = "sql-hlpr-prd-db"
 gcf_sa_name = "gcf-sa"
 
 # hosts-insert
