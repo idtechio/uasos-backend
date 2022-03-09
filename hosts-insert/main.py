@@ -95,6 +95,7 @@ def create_hosts_table_mapping():
         Column('ok_for_elderly', VARCHAR),
         Column('ok_for_any_nationality', VARCHAR),
         Column('duration_category', VARCHAR),
+        Column('transport_included', VARCHAR),
         )
 
     return tbl
@@ -131,6 +132,7 @@ def postgres_insert(db, pubsub_msg):
             ok_for_elderly=pubsub_msg.get("ok_for_elderly", VALUE_NOT_PROVIDED),
             ok_for_any_nationality=pubsub_msg.get("ok_for_any_nationality", VALUE_NOT_PROVIDED),
             duration_category=pubsub_msg.get("duration_category", VALUE_NOT_PROVIDED),
+            transport_included=pubsub_msg.get("transport_included", VALUE_NOT_PROVIDED),
         )
     )
     with db.connect() as conn:
