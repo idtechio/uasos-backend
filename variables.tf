@@ -209,6 +209,11 @@ variable "gcf_matches-create_pubsub_topic_name" {
   description = "gcf_matches-create_pubsub_topic_name"
 }
 
+variable "gcf_matches-create_matches_initial_status" {
+  type        = string
+  description = "gcf_matches-create_matches_initial_status"
+}
+
 
 variable "gcf_matches-create-notifications_name" {
   description = "gcf_matches-create-notifications_name"
