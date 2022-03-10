@@ -202,7 +202,7 @@ def fnc_publish_message(message):
 #region Email message creation utilities
 def create_to_email_element(name, email):
     return {
-        "email": email,
+        "email": email.strip(),
         "name": name
     }
 
@@ -346,8 +346,6 @@ def create_offering_notifications():
     sel_matches = (
         tbl_matches.select()
             .where(tbl_matches.c.fnc_status == MatchesStatus.DEFAULT)
-            .where(tbl_matches.c.fnc_host_status == MatchesStatus.DEFAULT)
-            .where(tbl_matches.c.fnc_guest_status == MatchesStatus.DEFAULT)
     )
 
     with db.connect() as conn:
@@ -369,12 +367,15 @@ def create_offering_notifications():
 
                 for host_row in host_rows:
                     for guest_row in guest_rows:
-                        message_for_host = create_paylod_for_host_get_match_template(match["db_matches_id"], guest_row, host_row)
-                        message_for_guest = create_paylod_for_guest_get_match_template(match["db_matches_id"], host_row, guest_row)
-                        print(message_for_host)
-                        print(message_for_guest)
-                        fnc_publish_message(message_for_host)
-                        fnc_publish_message(message_for_guest)
+                        if match["fnc_host_status"] == MatchesStatus.DEFAULT:
+                            message_for_host = create_paylod_for_host_get_match_template(match["db_matches_id"], guest_row, host_row)
+                            print(message_for_host)
+                            fnc_publish_message(message_for_host)
+                        
+                        if match["fnc_guest_status"] == MatchesStatus.DEFAULT:
+                            message_for_guest = create_paylod_for_guest_get_match_template(match["db_matches_id"], host_row, guest_row)
+                            print(message_for_guest)
+                            fnc_publish_message(message_for_guest)
 
                 upd_matches_status = (
                     tbl_matches.update()
