@@ -1,9 +1,9 @@
-project_id       = "ukrn-hlpr"
+project_id       = "ukrn-hlpr-dev"
 region           = "europe-central2"
 secondary_region = "europe-west3"
-project_number   = "55609607717"
+project_number   = "727398461288"
 
-tf_repo_name = "gcp-infra"
+tf_repo_name = "uasos-dev-infra"
 
 network_name = "private-vpc"
 subnet_name1 = "private-subnetwork"
@@ -16,7 +16,7 @@ vpc_access_connector_name = "eu-central2-serverless"
 ### Functions-specific
 
 gcf_secret_configuration_context = "FUNCTIONS_CONFIGURATION_CONTEXT"
-cloud_sql_instance_name = "sql-hlpr-prd-db"
+cloud_sql_instance_name = "sql-ukr-helper-dev"
 gcf_sa_name = "gcf-sa"
 
 gcf_matches_table_name = "matches"
