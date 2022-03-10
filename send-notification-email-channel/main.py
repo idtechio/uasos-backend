@@ -39,14 +39,13 @@ def fnc_target(event, context):
 def send_notification(pubsub_msg):
 	from_email = pubsub_msg['from_email']
 	template_id = pubsub_msg['template_id']
-
-	to_emails = [(x['email'], x['name']) for x in pubsub_msg['to_emails']]
+	to_emails = (pubsub_msg['to_emails']['email'], pubsub_msg['to_emails']['name'])
 
 	message = Mail(
 					from_email=from_email,
 					to_emails=to_emails)
 
-	message.dynamic_template_data = dict([(x['key'], x['value']) for x in pubsub_msg['context']])
+	message.dynamic_template_data = pubsub_msg['context']
 
 	message.template_id = template_id
 
