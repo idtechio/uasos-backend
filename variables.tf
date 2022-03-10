@@ -330,3 +330,92 @@ variable "gcf_send_notification_email_channel_pubsub_topic_name" {
   description = "gcf_send_notification_email_channel_pubsub_topic_name"
 }
 
+variable "gcf_matches-create-match-sealed-notifications_name" {
+  description = "gcf_matches-create-match-sealed-notifications_name"
+  type        = string
+}
+
+variable "gcf_matches-create-match-sealed-notifications_target" {
+  type        = string
+  description = "gcf_matches-create-match-sealed-notifications_target"
+}
+
+variable "gcf_matches-create-match-sealed-notifications_folder" {
+  type        = string
+  description = "gcf_matches-create-match-sealed-notifications_folder"
+}
+
+variable "gcf_matches-create-match-sealed-notifications_memory" {
+  type        = string
+  description = "gcf_matches-create-match-sealed-notifications_memory"
+}
+
+variable "gcf_matches-create-match-sealed-notifications_timeout" {
+  type        = number
+  description = "gcf_matches-create-match-sealed-notifications_timeout"
+}
+
+variable "gcf_matches-create-match-sealed-notifications_pubsub_topic_name" {
+  type        = string
+  description = "gcf_matches-create-match-sealed-notifications_pubsub_topic_name"
+}
+
+variable "gcf_matches-create-offering-notifications_name" {
+  description = "gcf_matches-create-offering-notifications_name"
+  type        = string
+}
+
+variable "gcf_matches-create-offering-notifications_target" {
+  type        = string
+  description = "gcf_matches-create-offering-notifications_target"
+}
+
+variable "gcf_matches-create-offering-notifications_folder" {
+  type        = string
+  description = "gcf_matches-create-offering-notifications_folder"
+}
+
+variable "gcf_matches-create-offering-notifications_memory" {
+  type        = string
+  description = "gcf_matches-create-offering-notifications_memory"
+}
+
+variable "gcf_matches-create-offering-notifications_timeout" {
+  type        = number
+  description = "gcf_matches-create-offering-notifications_timeout"
+}
+
+variable "gcf_matches-create-offering-notifications_pubsub_topic_name" {
+  type        = string
+  description = "gcf_matches-create-offering-notifications_pubsub_topic_name"
+}
+
+variable "gcf_hosts_table_name" {
+  type        = string
+  description = "gcf_hosts_table_name"
+}
+
+variable "gcf_host_initial_status" {
+  type        = string
+  description = "gcf_host_initial_status"
+}
+
+variable "gcf_guests_table_name" {
+  type        = string
+  description = "gcf_guests_table_name"
+}
+
+variable "gcf_guest_initial_status" {
+  type        = string
+  description = "gcf_guest_initial_status"
+}
+
+variable "gcf_matches_table_name" {
+  type        = string
+  description = "gcf_matches_table_name"
+}
+
+variable "gcf_match_initial_status" {
+  type        = string
+  description = "gcf_match_initial_status"
+}

@@ -11,7 +11,9 @@ module "gcf_sa" {
     "${var.project_id}=>roles/cloudfunctions.invoker",
     "${var.project_id}=>roles/secretmanager.viewer",
     "${var.project_id}=>roles/cloudsql.instanceUser",
-    "${var.project_id}=>roles/cloudsql.admin"
+    "${var.project_id}=>roles/cloudsql.admin",
+    "${var.project_id}=>roles/pubsub.publisher",
+    "${var.project_id}=>roles/pubsub.subscriber"
   ]
 }
 
@@ -36,6 +38,9 @@ module "gcf_hosts-insert" {
         HOSTS_TABLE_NAME= "${var.gcf_hosts-insert_hosts_table_name}"
         HOST_INITIAL_STATUS= "${var.gcf_hosts-insert_host_initial_status}"
         SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+        HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+        GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+        MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
     }
 }
 
@@ -60,6 +65,9 @@ module "gcf_guests-insert" {
         GUESTS_TABLE_NAME= "${var.gcf_guests-insert_guests_table_name}"
         GUEST_INITIAL_STATUS= "${var.gcf_guests-insert_guest_initial_status}"
         SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+        HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+        GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+        MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
     }
 }
 
@@ -82,6 +90,12 @@ module "gcf_matches-create" {
         PROJECT_ID= "${var.project_id}",
         DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
         SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+        HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+        HOST_INITIAL_STATUS= "${var.gcf_host_initial_status}"
+        GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+        GUEST_INITIAL_STATUS= "${var.gcf_guest_initial_status}"
+        MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
+        MATCHES_INITIAL_STATUS= "${var.gcf_match_initial_status}"
     }
 }
 
@@ -104,30 +118,11 @@ module "gcf_change-status" {
         PROJECT_ID= "${var.project_id}",
         DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
         SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+        HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+        GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+        MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
     }
 }
-module "gcf_matches-create-notifications" {
-    source = "./modules/functions"
-    project_id = "${var.project_id}"
-    region = "${var.region}"
-
-    fnc_name    = "${var.gcf_matches-create-notifications_name}"
-    fnc_target  = "${var.gcf_matches-create-notifications_target}"
-    fnc_folder  = "${var.gcf_matches-create-notifications_folder}"
-    fnc_memory  = "${var.gcf_matches-create-notifications_memory}"
-    fnc_timeout = "${var.gcf_matches-create-notifications_timeout}"
-    
-    fnc_pubsub_topic_name = "${var.gcf_matches-create-notifications_pubsub_topic_name}"
-
-    fnc_service_account = "${module.gcf_sa.email}"
-
-    environment_variables = {
-        PROJECT_ID= "${var.project_id}",
-        DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
-        SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
-    }
-}
-
 
 module "gcf_matches_process_rejections" {
   source = "./modules/functions"
@@ -148,6 +143,9 @@ module "gcf_matches_process_rejections" {
     PROJECT_ID= "${var.project_id}",
     DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
     SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+    HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+    GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+    MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
   }
 }
 module "gcf_matches_process_timeout" {
@@ -169,6 +167,9 @@ module "gcf_matches_process_timeout" {
     PROJECT_ID= "${var.project_id}",
     DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
     SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+    HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+    GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+    MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
   }
 }
 module "gcf_send_notification_email_channel" {
@@ -190,5 +191,59 @@ module "gcf_send_notification_email_channel" {
     PROJECT_ID= "${var.project_id}",
     DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
     SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+    HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+    GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+    MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
+  }
+}
+
+
+module "gcf_matches-create-match-sealed-notifications" {
+  source = "./modules/functions"
+  project_id = "${var.project_id}"
+  region = "${var.region}"
+
+  fnc_name    = "${var.gcf_matches-create-match-sealed-notifications_name}"
+  fnc_target  = "${var.gcf_matches-create-match-sealed-notifications_target}"
+  fnc_folder  = "${var.gcf_matches-create-match-sealed-notifications_folder}"
+  fnc_memory  = "${var.gcf_matches-create-match-sealed-notifications_memory}"
+  fnc_timeout = "${var.gcf_matches-create-match-sealed-notifications_timeout}"
+
+  fnc_pubsub_topic_name = "${var.gcf_matches-create-match-sealed-notifications_pubsub_topic_name}"
+
+  fnc_service_account = "${module.gcf_sa.email}"
+
+  environment_variables = {
+    PROJECT_ID= "${var.project_id}"
+    DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
+    SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+    HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+    GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+    MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
+  }
+}
+
+module "gcf_matches-create-offering-notifications" {
+  source = "./modules/functions"
+  project_id = "${var.project_id}"
+  region = "${var.region}"
+
+  fnc_name    = "${var.gcf_matches-create-offering-notifications_name}"
+  fnc_target  = "${var.gcf_matches-create-offering-notifications_target}"
+  fnc_folder  = "${var.gcf_matches-create-offering-notifications_folder}"
+  fnc_memory  = "${var.gcf_matches-create-offering-notifications_memory}"
+  fnc_timeout = "${var.gcf_matches-create-offering-notifications_timeout}"
+
+  fnc_pubsub_topic_name = "${var.gcf_matches-create-offering-notifications_pubsub_topic_name}"
+
+  fnc_service_account = "${module.gcf_sa.email}"
+
+  environment_variables = {
+    PROJECT_ID= "${var.project_id}"
+    DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
+    SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+    HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+    GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+    MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
   }
 }

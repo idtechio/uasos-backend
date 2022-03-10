@@ -19,6 +19,10 @@ gcf_secret_configuration_context = "FUNCTIONS_CONFIGURATION_CONTEXT"
 cloud_sql_instance_name = "sql-hlpr-prd-db"
 gcf_sa_name = "gcf-sa"
 
+gcf_matches_table_name = "matches"
+gcf_guests_table_name = "guests"
+gcf_hosts_table_name = "hosts"
+
 # hosts-insert
 
 gcf_hosts-insert_name = "hosts-insert"
@@ -60,6 +64,7 @@ gcf_matches-create_folder = "matches-create"
 gcf_matches-create_memory = 1024 
 gcf_matches-create_timeout = 540 
 gcf_matches-create_pubsub_topic_name = "matches-create" 
+gcf_matches-create_matches_initial_status = "055" 
 
 # gcf_matches-create-notifications
 
@@ -90,3 +95,21 @@ gcf_send_notification_email_channel_folder = "send-notification-email-channel"
 gcf_send_notification_email_channel_memory = 1024
 gcf_send_notification_email_channel_timeout = 540
 gcf_send_notification_email_channel_pubsub_topic_name = "send_notification_email_channel"
+
+gcf_matches-create-match-sealed-notifications_name = "matches-create-match-sealed-notifications"
+gcf_matches-create-match-sealed-notifications_target = "fnc_target"
+gcf_matches-create-match-sealed-notifications_folder = "matches-create-match-sealed-notifications"
+gcf_matches-create-match-sealed-notifications_memory = 1024
+gcf_matches-create-match-sealed-notifications_timeout = 540
+gcf_matches-create-match-sealed-notifications_pubsub_topic_name = "matches-create-match-sealed-notifications"
+
+gcf_matches-create-offering-notifications_name = "matches-create-offering-notifications"
+gcf_matches-create-offering-notifications_target = "fnc_target"
+gcf_matches-create-offering-notifications_folder = "matches-create-offering-notifications"
+gcf_matches-create-offering-notifications_memory = 1024
+gcf_matches-create-offering-notifications_timeout = 540
+gcf_matches-create-offering-notifications_pubsub_topic_name = "matches-create-offering-notifications"
+
+gcf_host_initial_status = "065"
+gcf_guest_initial_status = "065"
+gcf_match_initial_status = "055"

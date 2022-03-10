@@ -77,13 +77,14 @@ class HostsGuestsStatus(Enum):
 
 def query_status(input_payload):
 	return {
-		True: MatchesStatus.MATCH_ACCEPTED,
-		False: MatchesStatus.MATCH_REJECTED
-	}.get(input_payload['accepted'], MatchesStatus.DEFAULT)
+		1: MatchesStatus.MATCH_ACCEPTED,
+		0: MatchesStatus.MATCH_REJECTED
+	}.get(int(input_payload['accepted']), MatchesStatus.DEFAULT)
 
 
 def create_matches_table_mapping():
 	meta = MetaData(db)
+	#FIXME: changes table name to use environmental variable like other functions
 	tbl = Table('matches', meta,
 				Column('db_matches_id', VARCHAR),
 				Column('fnc_host_status', VARCHAR),
@@ -101,7 +102,7 @@ def change_host_status(matches_id, target_status):
 		tbl.update()
 			.where(tbl.c.db_matches_id==matches_id)
 			.where(tbl.c.fnc_status==MatchesStatus.FNC_AWAITING_RESPONSE)
-			.values(fnc_h_status=target_status)
+			.values(fnc_host_status=target_status)
 	)
 
 	with db.connect() as conn:
@@ -115,7 +116,7 @@ def change_guest_status(matches_id, target_status):
 		tbl.update()
 			.where(tbl.c.db_matches_id==matches_id)
 			.where(tbl.c.fnc_status==MatchesStatus.FNC_AWAITING_RESPONSE)
-			.values(fnc_g_status=target_status)
+			.values(fnc_guest_status=target_status)
 	)
 
 	with db.connect() as conn:
@@ -139,7 +140,8 @@ def postgres_change_status(pubsub_msg):
 
 	target_status = query_status(pubsub_msg)
 
-	if not pubsub_msg['is_host']:
-		change_host_status(matches_id, target_status)
-	else:
-		change_guest_status(matches_id, target_status)
+	if target_status != MatchesStatus.DEFAULT:
+		if pubsub_msg['is_host']:
+			change_host_status(matches_id, target_status)
+		else:
+			change_guest_status(matches_id, target_status)
