@@ -389,7 +389,6 @@ def fnc_target(event, context):
 def create_matching(pubsub_msg):
     HOSTS_MATCHING_BATCH_SIZE = configuration_context["HOSTS_MATCHING_BATCH_SIZE"]
     GUESTS_MATCHING_BATCH_SIZE = configuration_context["GUESTS_MATCHING_BATCH_SIZE"]
-    MATCHES_INITIAL_STATUS = os.environ["MATCHES_INITIAL_STATUS"]
 
     tbl_matches = create_matches_table_mapping()
     tbl_guests = create_guests_table_mapping()
@@ -520,11 +519,11 @@ def create_matching(pubsub_msg):
 
                 ins_match = tbl_matches.insert().values(
                     fnc_ts_matched=f"{query_epoch_with_milliseconds()}",
-                    fnc_status=MATCHES_INITIAL_STATUS,
+                    fnc_status=MatchesStatus.DEFAULT,
                     fnc_hosts_id=host.rid,
                     fnc_guests_id=guest.rid,
-                    fnc_host_status=MATCHES_INITIAL_STATUS,
-                    fnc_guest_status=MATCHES_INITIAL_STATUS,
+                    fnc_host_status=MatchesStatus.DEFAULT,
+                    fnc_guest_status=MatchesStatus.DEFAULT,
                 )
 
                 conn.execute(ins_match)
