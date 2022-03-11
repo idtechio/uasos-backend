@@ -144,6 +144,7 @@ def create_hosts_table_mapping():
         Column("duration_category", VARCHAR),
         Column("email", VARCHAR),
         Column("phone_num", VARCHAR),
+        Column('transport_included', VARCHAR),
     )
 
     return tbl
@@ -269,69 +270,6 @@ publisher = pubsub_v1.PublisherClient()
 
 def fnc_target(event, context):
     create_offering_notifications()
-
-
-# region Email dynamic content preparation
-
-# SHELTER_TYPES = ["bed", "room", "flat", "house", "public_shared_space"]
-def translate_shelter_type(shelter_type):
-    shelter_type = shelter_type[1:-1]
-    if shelter_type == "bed":
-        return "Ліжко в загальній кімнаті/ Bed in a shared room/ Łóżko we współdzielonym pokoju"
-    elif shelter_type == "room":
-        return "Кімната в загальній квартирі/будинку/ Room in a shared flat/house / Pokój we współdzielonym mieszkaniu/domu"
-    elif shelter_type == "flat":
-        return "Квартира / Flat for exclusive use / Mieszkanie na wyłączność"
-    elif shelter_type == "house":
-        return "Дім / House for exclusive use / Dom na wyłączność"
-    elif shelter_type == "public_shared_space":
-        return "Колективна кімната (наприклад, шкільна кімната) / Collective room (e.g. school room) / Pokój zbiorowy (np. szkolna sala)"
-    else:
-        return ""
-
-
-# GROUP_RELATIONS = ["single_man", "single_woman", "spouses", "mother_with_children", "family_with_children", "unrelated_group"]
-def translate_group_relation(group_relation):
-    group_relation = group_relation[1:-1]
-    if group_relation == "single_man":
-        return "Неодружений/Single/Singiel"
-    elif group_relation == "single_woman":
-        return "Неодружена/Single/Singielka"
-    elif group_relation == "spouses":
-        return "Подружжі/Spouses/Małżonkowie"
-    elif group_relation == "mother_with_children":
-        return "Мама з дітьми/Mother with children/Matka z dziećmi"
-    elif group_relation == "family_with_children":
-        return "Сімя з дітьми/Family with children/Rodzina z dziećmi"
-    elif group_relation == "unrelated_group":
-        return "Неспоріднена група/Unrelated group/Niepowiązana grupa"
-
-
-def translate_nationality(is_ukrainian_nationality):
-    return (
-        "українська/Ukrainian/Ukraińska"
-        if is_ukrainian_nationality == "TRUE"
-        else "Інший ніж український/Non-Ukrainian/Inna niż Ukraińska"
-    )
-
-
-def translate_complication(complication_flag):
-    return "Так/Yes/Tak" if complication_flag == "TRUE" else "ні/No/Nie"
-
-
-# DURATION_CATEGORIES = ["less_than_1_week", "1_week", "2_3_weeks", "month", "longer"]
-def translate_duration_category(duration):
-    duration = duration[1:-1]
-    if duration == "less_than_1_week":
-        return "< 1"
-    elif duration == "1_week":
-        return "1"
-    elif duration == "2_3_weeks":
-        return "2-3"
-    elif duration == "month":
-        return "4"
-    elif duration == "longer":
-        return "> 4"
 
 
 # endregion

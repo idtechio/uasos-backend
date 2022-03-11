@@ -144,6 +144,7 @@ def create_hosts_table_mapping():
         Column("ok_for_any_nationality", VARCHAR),
         Column("duration_category", VARCHAR),
         Column("email", VARCHAR),
+        Column('transport_included', VARCHAR),
     )
 
     return tbl
@@ -249,7 +250,7 @@ def create_paylod_for_guest_get_match_template(matches_id, host_row, guest_row):
         "host_acctype": translate_shelter_type(host_row["shelter_type"]),
         "host_stay_length": translate_duration_category(host_row["duration_category"]),
         "host_type": translate_shelter_type(host_row["shelter_type"]),
-        "transport": "True",  # FIXME: placeholder
+        "transport": translate_complication(host_row["transport_included"]),
         "adv_preg_allowed": translate_complication(host_row["ok_for_pregnant"]),
         "elderly_allowed": translate_complication(host_row["ok_for_elderly"]),
         "handicapped_allowed": translate_complication(host_row["ok_for_disabilities"]),
