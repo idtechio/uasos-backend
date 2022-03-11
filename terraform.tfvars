@@ -94,7 +94,7 @@ gcf_send_notification_email_channel_target = "fnc_target"
 gcf_send_notification_email_channel_folder = "send-notification-email-channel"
 gcf_send_notification_email_channel_memory = 1024
 gcf_send_notification_email_channel_timeout = 540
-gcf_send_notification_email_channel_pubsub_topic_name = "send_notification_email_channel"
+gcf_send_notification_email_channel_pubsub_topic_name = "email"
 
 gcf_matches-create-match-sealed-notifications_name = "matches-create-match-sealed-notifications"
 gcf_matches-create-match-sealed-notifications_target = "fnc_target"

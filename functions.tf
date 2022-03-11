@@ -220,6 +220,7 @@ module "gcf_matches-create-match-sealed-notifications" {
     HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
     GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
     MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
+    SEND_EMAIL_TOPIC = "${var.gcf_send_notification_email_channel_pubsub_topic_name}"
   }
 }
 
@@ -245,5 +246,6 @@ module "gcf_matches-create-offering-notifications" {
     HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
     GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
     MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
+    SEND_EMAIL_TOPIC = "${var.gcf_send_notification_email_channel_pubsub_topic_name}"
   }
 }

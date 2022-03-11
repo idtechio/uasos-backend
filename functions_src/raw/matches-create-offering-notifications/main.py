@@ -200,7 +200,7 @@ def change_match_status(db_connection, db_matches_id, target_status):
 
 # region integration utilities
 def fnc_publish_message(message):
-    topic_name = "emails"  # FIXME: change to 'emails'
+    topic_name = os.environ["SEND_EMAIL_TOPIC"]
     topic_path = publisher.topic_path(os.environ["PROJECT_ID"], topic_name)
 
     message_json = json.dumps(message)
