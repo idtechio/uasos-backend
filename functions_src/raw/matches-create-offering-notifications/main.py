@@ -403,7 +403,7 @@ def create_offering_notifications():
 
                 for host_row in host_rows:
                     for guest_row in guest_rows:
-                        if match["fnc_host_status"] == MatchesStatus.DEFAULT:
+                        if match["fnc_host_status"] == MatchesStatus.DEFAULT.value:
                             message_for_host = (
                                 create_paylod_for_host_get_match_template(
                                     match["db_matches_id"], guest_row, host_row
@@ -412,7 +412,7 @@ def create_offering_notifications():
                             print(message_for_host)
                             fnc_publish_message(message_for_host)
 
-                        if match["fnc_guest_status"] == MatchesStatus.DEFAULT:
+                        if match["fnc_guest_status"] == MatchesStatus.DEFAULT.value:
                             message_for_guest = (
                                 create_paylod_for_guest_get_match_template(
                                     match["db_matches_id"], host_row, guest_row
