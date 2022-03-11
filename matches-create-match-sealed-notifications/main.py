@@ -220,7 +220,7 @@ def fnc_publish_message(message):
 
 # region Email message creation utilities
 def create_to_email_element(name, email):
-    return {"email": email, "name": name}
+    return {"email": email.strip(), "name": name}
 
 
 def create_email_payload(template_id, context, to_emails):
