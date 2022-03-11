@@ -3,6 +3,7 @@ import sqlalchemy
 import base64
 import json
 import time
+from enum import Enum
 from sqlalchemy import create_engine, Table, MetaData, Column, inspect
 from sqlalchemy.dialects.postgresql import *
 
@@ -65,6 +66,16 @@ def create_db_engine():
 db = create_db_engine()
 
 
+class HostsGuestsStatus(Enum):
+    MOD_REJECTED = "045"
+    DEFAULT = "055"
+    MOD_ACCEPTED = "065"
+    FNC_BEING_PROCESSED = "075"
+    FNC_MATCHED = "085"
+    MATCH_ACCEPTED = "095"
+
+
+
 def fnc_target(event, context):
     if not running_locally:
         pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
@@ -114,7 +125,7 @@ def postgres_insert(db, pubsub_msg):
 
     ins = tbl.insert().values(
         fnc_ts_registered=f"{int(time.time() * 1000)}",
-        fnc_status=os.environ["GUEST_INITIAL_STATUS"],
+        fnc_status=HostsGuestsStatus.MOD_ACCEPTED,
         fnc_score=5,
         name=pubsub_msg.get("name", VALUE_NOT_PROVIDED),
         country=pubsub_msg.get("country", VALUE_NOT_PROVIDED),
