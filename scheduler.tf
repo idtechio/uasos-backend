@@ -5,7 +5,7 @@ resource "google_cloud_scheduler_job" "gcf-matches-create-trigger" {
 
   pubsub_target {
     topic_name = module.gcf_matches-create.pubsub_topic_id
-    data       = base64encode("test")
+    data       = base64encode("{}}")
   }
 }
 
@@ -16,7 +16,7 @@ resource "google_cloud_scheduler_job" "gcf_matches-create-match-sealed-notificat
 
   pubsub_target {
     topic_name = module.gcf_matches-create-match-sealed-notifications.pubsub_topic_id
-    data       = base64encode("test")
+    data       = base64encode("{}")
   }
 }
 
@@ -27,7 +27,7 @@ resource "google_cloud_scheduler_job" "gcf_matches-create-offering-notifications
 
   pubsub_target {
     topic_name = module.gcf_matches-create-offering-notifications.pubsub_topic_id
-    data       = base64encode("test")
+    data       = base64encode("{}}")
   }
 }
 
