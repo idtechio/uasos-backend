@@ -144,7 +144,7 @@ def create_hosts_table_mapping():
         Column("duration_category", VARCHAR),
         Column("email", VARCHAR),
         Column("phone_num", VARCHAR),
-        Column('transport_included', VARCHAR),
+        Column("transport_included", VARCHAR),
     )
 
     return tbl
