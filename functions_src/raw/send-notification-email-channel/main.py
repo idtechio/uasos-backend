@@ -1,7 +1,7 @@
 import os
 import base64
 import json
-from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import Mail, Asm, GroupId, GroupsToDisplay
 from sendgrid import SendGridAPIClient
 
 from google.cloud import secretmanager
@@ -42,10 +42,9 @@ def send_notification(pubsub_msg):
     to_emails = (pubsub_msg["to_emails"]["email"], pubsub_msg["to_emails"]["name"])
 
     message = Mail(from_email=from_email, to_emails=to_emails)
-
     message.dynamic_template_data = pubsub_msg["context"]
-
     message.template_id = template_id
+    message.asm = Asm(GroupId(18888), GroupsToDisplay([18888]))
 
     try:
         sg = SendGridAPIClient(configuration_context["SENDGRID_API_KEY"])
