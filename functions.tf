@@ -190,6 +190,27 @@ module "gcf_send_notification_email_channel" {
   }
 }
 
+module "gcf_send_notification_sms_channel" {
+  source = "./modules/functions"
+  project_id = "${var.project_id}"
+  region = "${var.region}"
+
+  fnc_name    = "${var.gcf_send_notification_sms_channel_name}"
+  fnc_folder  = "${var.gcf_send_notification_sms_channel_name}"
+  fnc_target  = "${var.gcf_target}"
+  fnc_memory  = "${var.gcf_memory}"
+  fnc_timeout = "${var.gcf_timeout}"
+
+  fnc_pubsub_topic_name = "${var.gcf_send_notification_sms_channel_pubsub_topic_name}"
+
+  fnc_service_account = "${module.gcf_sa.email}"
+
+  environment_variables = {
+    PROJECT_ID= "${var.project_id}",
+    DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
+    SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+  }
+}
 
 module "gcf_matches-create-match-sealed-notifications" {
   source = "./modules/functions"
@@ -214,6 +235,7 @@ module "gcf_matches-create-match-sealed-notifications" {
     GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
     MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
     SEND_EMAIL_TOPIC = "${var.gcf_send_notification_email_channel_pubsub_topic_name}"
+    SEND_SMS_TOPIC = "${var.gcf_send_notification_sms_channel_pubsub_topic_name}"
   }
 }
 
@@ -240,5 +262,6 @@ module "gcf_matches-create-offering-notifications" {
     GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
     MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
     SEND_EMAIL_TOPIC = "${var.gcf_send_notification_email_channel_pubsub_topic_name}"
+    SEND_SMS_TOPIC = "${var.gcf_send_notification_sms_channel_pubsub_topic_name}"
   }
 }

@@ -51,6 +51,9 @@ gcf_matches_process_timeout_pubsub_topic_name = "matches_process_timeout"
 gcf_send_notification_email_channel_name = "send-notification-email-channel"
 gcf_send_notification_email_channel_pubsub_topic_name = "email"
 
+gcf_send_notification_sms_channel_name = "send-notification-sms-channel"
+gcf_send_notification_sms_channel_pubsub_topic_name = "sms"
+
 gcf_matches-create-match-sealed-notifications_name = "matches-create-match-sealed-notifications"
 gcf_matches-create-match-sealed-notifications_pubsub_topic_name = "matches-create-match-sealed-notifications"
 

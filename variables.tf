@@ -177,6 +177,16 @@ variable "gcf_send_notification_email_channel_pubsub_topic_name" {
   description = "gcf_send_notification_email_channel_pubsub_topic_name"
 }
 
+variable "gcf_send_notification_sms_channel_name" {
+  description = "gcf_send_notification_sms_channel_name"
+  type        = string
+}
+
+variable "gcf_send_notification_sms_channel_pubsub_topic_name" {
+  type        = string
+  description = "gcf_send_notification_sms_channel_pubsub_topic_name"
+}
+
 variable "gcf_matches-create-match-sealed-notifications_name" {
   description = "gcf_matches-create-match-sealed-notifications_name"
   type        = string

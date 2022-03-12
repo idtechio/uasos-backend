@@ -116,6 +116,7 @@ def create_guests_table_mapping():
         Column("is_ukrainian_nationality", VARCHAR),
         Column("duration_category", VARCHAR),
         Column("email", VARCHAR),
+        Column("phone_num", VARCHAR),
     )
 
     return tbl
@@ -144,6 +145,7 @@ def create_hosts_table_mapping():
         Column("ok_for_any_nationality", VARCHAR),
         Column("duration_category", VARCHAR),
         Column("email", VARCHAR),
+        Column("phone_num", VARCHAR),
         Column("transport_included", VARCHAR),
     )
 
@@ -217,6 +219,22 @@ def fnc_publish_message(message):
         return (e, 500)
 
 
+def fnc_publish_sms(message):
+    topic_name = os.environ["SEND_SMS_TOPIC"]
+    topic_path = publisher.topic_path(os.environ["PROJECT_ID"], topic_name)
+
+    message_json = json.dumps(message)
+    message_bytes = message_json.encode("utf-8")
+
+    try:
+        publish_future = publisher.publish(topic_path, data=message_bytes)
+        publish_future.result()  # Verify the publish succeeded
+        return "Message published."
+    except Exception as e:
+        print(e)
+        return (e, 500)
+
+
 # endregion
 
 
@@ -231,6 +249,12 @@ def create_email_payload(template_id, context, to_emails):
         "context": context,
         "template_id": template_id,
         "to_emails": to_emails,
+    }
+
+
+def create_sms_payload(phone_num):
+    return {
+        "phone_num": phone_num,
     }
 
 
@@ -413,6 +437,7 @@ def create_offering_notifications():
                             )
                             print(message_for_host)
                             fnc_publish_message(message_for_host)
+                            fnc_publish_sms(create_sms_payload(host_row["phone_num"]))
 
                         if match["fnc_guest_status"] == MatchesStatus.DEFAULT.value:
                             message_for_guest = (
@@ -422,6 +447,7 @@ def create_offering_notifications():
                             )
                             print(message_for_guest)
                             fnc_publish_message(message_for_guest)
+                            fnc_publish_sms(create_sms_payload(guest_row["phone_num"]))
 
                 upd_matches_status = (
                     tbl_matches.update()
