@@ -39,16 +39,7 @@ def fnc_target(event, context):
 def send_notification(pubsub_msg):
     to_phone_number = pubsub_msg["phone_num"]
 
-    body = (
-        "UA: Ми знайшли запит, що відповідає Вашим критеріям! \n"
-        "Для того, щоб дати свою відповідь на запит чи отримати додаткову інформацію- перевірте Вашу електронну скриньку. "
-        "Зверніть увагу на те, що інколи листи надходять до папки ' Спам'. \n"
-        "Команда UASOS"
-        "\n\n"
-        "PL: Znaleźliśmy dla Ciebie dopasowanie! \n"
-        "Jak najszybciej sprawdź swoją skrzynkę e-mail, żeby dowiedzieć się więcej i odpowiedzieć. Sprawdź również zakładkę spam. \n"
-        "Zespół UASOS"
-    )
+    body = "Mamy dla Ciebie kontakt!Sprawdz e-mail/spam i potwierdz. У нас є для Вас контакт!Перевірте імейл (спам) та дайте відповідь"
 
     try:
         client = TwilioClient(
