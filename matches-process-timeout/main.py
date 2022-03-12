@@ -178,7 +178,7 @@ def check_expired_in_hours(str_epoch, timeout_hours):
     delta = now - int_epoch
     delta_in_hours = int(delta / 1000 / 3600)
 
-    return delta_in_hours > timeout_hours
+    return delta_in_hours > int(timeout_hours)
 
 
 def fnc_target(event, context):
