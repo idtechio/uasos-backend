@@ -39,6 +39,7 @@ else:
     load_dotenv()
 
 
+# region Database
 def create_db_engine():
     db_config = {
         "drivername": "postgresql+pg8000",
@@ -69,47 +70,16 @@ def create_db_engine():
 
 
 db = create_db_engine()
+# endregion
 
 
-def create_matches_table_mapping():
-    table_name = os.environ["MATCHES_TABLE_NAME"]
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_matches_id", VARCHAR),
-        Column("fnc_ts_matched", VARCHAR),
-        Column("fnc_status", VARCHAR),
-    )
-
-    return tbl
-
-
-def create_hosts_table_mapping():
-    table_name = table_name = os.environ["HOSTS_TABLE_NAME"]
-    meta = MetaData(db)
-    tbl = Table(
-        table_name, meta, Column("db_hosts_id", VARCHAR), Column("fnc_status", VARCHAR)
-    )
-
-    return tbl
-
-
-def create_guests_table_mapping():
-    table_name = os.environ["GUESTS_TABLE_NAME"]
-    meta = MetaData(db)
-    tbl = Table(
-        table_name, meta, Column("db_guests_id", VARCHAR), Column("fnc_status", VARCHAR)
-    )
-
-    return tbl
-
-
+# region Enum definitions
 class MatchesStatus(Enum):
     DEFAULT = "055"
     FNC_AWAITING_RESPONSE = "065"
     MATCH_ACCEPTED = "075"
     MATCH_REJECTED = "045"
+    MATCH_TIMEOUT = "035"
 
 
 class HostsGuestsStatus(Enum):
@@ -121,6 +91,85 @@ class HostsGuestsStatus(Enum):
     MATCH_ACCEPTED = "095"
 
 
+# endregion
+
+
+# region Database data models
+def create_matches_table_mapping():
+    table_name = os.environ["MATCHES_TABLE_NAME"]
+    # table_name = 'matches'
+    meta = MetaData(db)
+    tbl = Table(
+        table_name,
+        meta,
+        Column("db_matches_id", VARCHAR),
+        Column("fnc_ts_matched", VARCHAR),
+        Column("fnc_status", VARCHAR),
+        Column("fnc_hosts_id", VARCHAR),
+        Column("fnc_guests_id", VARCHAR),
+        Column("fnc_host_status", VARCHAR),
+        Column("fnc_guest_status", VARCHAR),
+    )
+
+    return tbl
+
+
+def create_guests_table_mapping():
+    table_name = os.environ["GUESTS_TABLE_NAME"]
+    # table_name = 'guests'
+    meta = MetaData(db)
+    tbl = Table(
+        table_name,
+        meta,
+        Column("db_guests_id", VARCHAR),
+        Column("name", VARCHAR),
+        Column("city", VARCHAR),
+        Column("fnc_status", VARCHAR),
+        Column("listing_country", VARCHAR),
+        Column("acceptable_shelter_types", VARCHAR),
+        Column("beds", VARCHAR),
+        Column("group_relation", VARCHAR),
+        Column("is_pregnant", VARCHAR),
+        Column("is_with_disability", VARCHAR),
+        Column("is_with_animal", VARCHAR),
+        Column("is_with_elderly", VARCHAR),
+        Column("is_ukrainian_nationality", VARCHAR),
+        Column("duration_category", VARCHAR),
+    )
+
+    return tbl
+
+
+def create_hosts_table_mapping():
+    table_name = os.environ["HOSTS_TABLE_NAME"]
+    # table_name = 'hosts'
+    meta = MetaData(db)
+    tbl = Table(
+        table_name,
+        meta,
+        Column("db_hosts_id", VARCHAR),
+        Column("name", VARCHAR),
+        Column("fnc_status", VARCHAR),
+        Column("fnc_ts_registered", VARCHAR),
+        Column("city", VARCHAR),
+        Column("listing_country", VARCHAR),
+        Column("shelter_type", VARCHAR),
+        Column("beds", VARCHAR),
+        Column("acceptable_group_relations", VARCHAR),
+        Column("ok_for_pregnant", VARCHAR),
+        Column("ok_for_disabilities", VARCHAR),
+        Column("ok_for_animals", VARCHAR),
+        Column("ok_for_elderly", VARCHAR),
+        Column("ok_for_any_nationality", VARCHAR),
+        Column("duration_category", VARCHAR),
+    )
+
+    return tbl
+
+
+# endregion
+
+
 def check_expired_in_hours(str_epoch, timeout_hours):
     now = int(time.time() * 1000)
 
@@ -129,7 +178,7 @@ def check_expired_in_hours(str_epoch, timeout_hours):
     delta = now - int_epoch
     delta_in_hours = int(delta / 1000 / 3600)
 
-    return delta_in_hours > timeout_hours
+    return delta_in_hours > int(timeout_hours)
 
 
 def fnc_target(event, context):
@@ -146,10 +195,18 @@ def postgres_process_timeout(pubsub_msg):
     tbl_guests = create_guests_table_mapping()
     tbl_hosts = create_hosts_table_mapping()
 
-    sel_matches = tbl_matches.select().where(
-        tbl_matches.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE
+    sel_matches = (
+        tbl_matches.select()
+        .where(
+            or_(
+                tbl_matches.c.fnc_host_status == MatchesStatus.FNC_AWAITING_RESPONSE,
+                tbl_matches.c.fnc_guest_status == MatchesStatus.FNC_AWAITING_RESPONSE,
+            )
+        )
+        .where(tbl_matches.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
     )
 
+    print("Timeout value: ", int(configuration_context["MATCH_TIMEOUT_HOURS"]))
     with db.connect() as conn:
         with conn.begin():
             result = conn.execute(sel_matches)
@@ -160,38 +217,23 @@ def postgres_process_timeout(pubsub_msg):
                 if check_expired_in_hours(
                     row["fnc_ts_matched"], configuration_context["MATCH_TIMEOUT_HOURS"]
                 ):
-                    print(
-                        f"setting MATCH {row['db_matches_id']} to {MatchesStatus.MATCH_REJECTED} status"
-                    )
-
                     change_matches_status = (
                         tbl_matches.update()
                         .where(tbl_matches.c.db_matches_id == row["db_matches_id"])
-                        .values(fnc_status=MatchesStatus.MATCH_REJECTED)
+                        .values(fnc_status=MatchesStatus.MATCH_TIMEOUT)
                     )
-
                     conn.execute(change_matches_status)
-
-                    print(
-                        f"setting HOST {row['fnc_host_id']} to {HostsGuestsStatus.DEFAULT} status"
-                    )
 
                     change_hosts_status = (
                         tbl_hosts.update()
-                        .where(tbl_hosts.c.db_hosts_id == row["fnc_host_id"])
-                        .values(fnc_status=HostsGuestsStatus.DEFAULT)
+                        .where(tbl_hosts.c.db_hosts_id == row["fnc_hosts_id"])
+                        .values(fnc_status=HostsGuestsStatus.MOD_ACCEPTED)
                     )
-
                     conn.execute(change_hosts_status)
-
-                    print(
-                        f"setting GUEST {row['fnc_guest_id']} to {HostsGuestsStatus.DEFAULT} status"
-                    )
 
                     change_guests_status = (
                         tbl_guests.update()
-                        .where(tbl_guests.c.db_guests_id == row["fnc_guest_id"])
-                        .values(fnc_status=HostsGuestsStatus.DEFAULT)
+                        .where(tbl_guests.c.db_guests_id == row["fnc_guests_id"])
+                        .values(fnc_status=HostsGuestsStatus.MOD_ACCEPTED)
                     )
-
                     conn.execute(change_guests_status)

@@ -71,6 +71,7 @@ class MatchesStatus(Enum):
     FNC_AWAITING_RESPONSE = "065"
     MATCH_ACCEPTED = "075"
     MATCH_REJECTED = "045"
+    MATCH_TIMEOUT = "035"
 
 
 class HostsGuestsStatus(Enum):

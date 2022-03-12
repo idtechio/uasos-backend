@@ -3,6 +3,7 @@ import sqlalchemy
 import base64
 import json
 import time
+from enum import Enum
 from sqlalchemy import create_engine, Table, MetaData, Column, inspect
 from sqlalchemy.dialects.postgresql import *
 
@@ -109,6 +110,15 @@ def create_hosts_table_mapping():
     return tbl
 
 
+class HostsGuestsStatus(Enum):
+    MOD_REJECTED = "045"
+    DEFAULT = "055"
+    MOD_ACCEPTED = "065"
+    FNC_BEING_PROCESSED = "075"
+    FNC_MATCHED = "085"
+    MATCH_ACCEPTED = "095"
+
+
 def postgres_insert(db, pubsub_msg):
     tbl = create_hosts_table_mapping()
 
@@ -116,7 +126,7 @@ def postgres_insert(db, pubsub_msg):
 
     ins = tbl.insert().values(
         fnc_ts_registered=f"{int(time.time() * 1000)}",
-        fnc_status=os.environ["HOST_INITIAL_STATUS"],
+        fnc_status=HostsGuestsStatus.MOD_ACCEPTED,
         fnc_score=5,
         name=pubsub_msg.get("name", VALUE_NOT_PROVIDED),
         country=pubsub_msg.get("country", VALUE_NOT_PROVIDED),
