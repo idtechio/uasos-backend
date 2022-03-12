@@ -75,7 +75,6 @@ class HostsGuestsStatus(Enum):
     MATCH_ACCEPTED = "095"
 
 
-
 def fnc_target(event, context):
     if not running_locally:
         pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
