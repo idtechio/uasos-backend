@@ -195,8 +195,15 @@ def postgres_process_timeout(pubsub_msg):
     tbl_guests = create_guests_table_mapping()
     tbl_hosts = create_hosts_table_mapping()
 
-    sel_matches = tbl_matches.select().where(
-        tbl_matches.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE
+    sel_matches = (
+        tbl_matches.select()
+        .where(
+            or_(
+                tbl_matches.c.fnc_host_status == MatchesStatus.FNC_AWAITING_RESPONSE,
+                tbl_matches.c.fnc_guest_status == MatchesStatus.FNC_AWAITING_RESPONSE,
+            )
+        )
+        .where(tbl_matches.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
     )
 
     with db.connect() as conn:
