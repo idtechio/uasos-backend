@@ -206,6 +206,7 @@ def postgres_process_timeout(pubsub_msg):
         .where(tbl_matches.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
     )
 
+    print("Timeout value: ", int(configuration_context["MATCH_TIMEOUT_HOURS"]))
     with db.connect() as conn:
         with conn.begin():
             result = conn.execute(sel_matches)
