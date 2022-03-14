@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+from enum import Enum
 
 from dotenv import load_dotenv
 from google.cloud import secretmanager
@@ -12,6 +13,11 @@ running_locally = bool(os.getenv("LOCAL_DEVELOPMENT"))
 if running_locally:
     print(f"Running locally")
     load_dotenv()
+
+
+class Language(Enum):
+    PL = "pl"
+    UA = "us"
 
 
 def query_configuration_context(secret_id):
@@ -38,8 +44,13 @@ def fnc_target(event, context):
 
 def send_notification(pubsub_msg):
     to_phone_number = pubsub_msg["phone_num"]
+    language = pubsub_msg["language"]
 
-    body = "Mamy dla Ciebie kontakt!Sprawdz e-mail/spam i potwierdz. У нас є для Вас контакт!Перевірте імейл (спам) та дайте відповідь"
+    body = ""
+    if language == Language.PL.value:
+        body = "Mamy dla Ciebie kontakt!Sprawdz e-mail/spam i potwierdz."
+    elif language == Language.UA.value:
+        body = "У нас є для Вас контакт!Перевірте імейл (спам) та дайте відповідь"
 
     try:
         client = TwilioClient(

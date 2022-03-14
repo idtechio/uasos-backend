@@ -181,6 +181,11 @@ class MatchAcceptanceSide(Enum):
     HOST = "host"
 
 
+class Language(Enum):
+    PL = "pl"
+    UA = "us"
+
+
 # endregion
 
 
@@ -215,6 +220,29 @@ def fnc_publish_message(message):
     except Exception as e:
         print(e)
         return (e, 500)
+
+
+def fnc_publish_sms(message):
+    topic_name = os.environ["SEND_SMS_TOPIC"]
+    topic_path = publisher.topic_path(os.environ["PROJECT_ID"], topic_name)
+
+    message_json = json.dumps(message)
+    message_bytes = message_json.encode("utf-8")
+
+    try:
+        publish_future = publisher.publish(topic_path, data=message_bytes)
+        publish_future.result()  # Verify the publish succeeded
+        return "Message published."
+    except Exception as e:
+        print(e)
+        return (e, 500)
+
+
+def create_sms_payload(phone_num, language):
+    return {
+        "language": language,
+        "phone_num": phone_num,
+    }
 
 
 # endregion
@@ -331,7 +359,13 @@ def create_offering_notifications():
                         print(message_for_host)
                         print(message_for_guest)
                         fnc_publish_message(message_for_host)
+                        fnc_publish_sms(
+                            create_sms_payload(host_row["phone_num"], Language.PL.value)
+                        )
                         fnc_publish_message(message_for_guest)
+                        fnc_publish_sms(
+                            create_sms_payload(guest_row["phone_num"], Language.UA.value)
+                        )
 
                 upd_matches_status = (
                     tbl_matches.update()
