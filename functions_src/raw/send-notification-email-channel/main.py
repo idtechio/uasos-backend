@@ -1,7 +1,7 @@
 import os
 import base64
 import json
-from sendgrid.helpers.mail import Mail, Asm, GroupId, GroupsToDisplay
+from sendgrid.helpers.mail import Mail, Asm, GroupId, GroupsToDisplay, From, To
 from sendgrid import SendGridAPIClient
 
 from google.cloud import secretmanager
@@ -37,9 +37,9 @@ def fnc_target(event, context):
 
 
 def send_notification(pubsub_msg):
-    from_email = pubsub_msg["from_email"]
+    from_email = From(pubsub_msg["from_email"], "UASOS")
     template_id = pubsub_msg["template_id"]
-    to_emails = (pubsub_msg["to_emails"]["email"], pubsub_msg["to_emails"]["name"])
+    to_emails = To(pubsub_msg["to_emails"]["email"], pubsub_msg["to_emails"]["name"])
 
     message = Mail(from_email=from_email, to_emails=to_emails)
     message.dynamic_template_data = pubsub_msg["context"]
