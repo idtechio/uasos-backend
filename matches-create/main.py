@@ -206,7 +206,9 @@ def evaluate_pair(host: HostListing, guest: GuestListing, historical_matches):
 
     # -> Boosters for recency of host registration
     host_listing_age = age_in_hours(host.registration_date)
-    score += 0.05 * max(0.0, 1.0 - float(host_listing_age) / 2.0 / float(MATCH_TIMEOUT_HOURS))
+    score += 0.05 * max(
+        0.0, 1.0 - float(host_listing_age) / 2.0 / float(MATCH_TIMEOUT_HOURS)
+    )
 
     # -> Boosters for guest activity related to response rate for previous offers
     # TODO
@@ -516,7 +518,9 @@ def create_matching(pubsub_msg):
                         acceptable_shelter_types=query_list(
                             row["acceptable_shelter_types"]
                         ),
-                        is_ukrainian_nationality=bool(row["is_ukrainian_nationality"]),
+                        is_ukrainian_nationality=True
+                        if row["is_ukrainian_nationality"] == "TRUE"
+                        else False,
                         duration_category=DURATION_CATEGORIES.index(
                             query_string(row["duration_category"])
                         ),

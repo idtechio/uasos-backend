@@ -183,6 +183,11 @@ class MatchAcceptanceSide(Enum):
     HOST = "host"
 
 
+class Language(Enum):
+    PL = "pl"
+    UA = "us"
+
+
 # endregion
 
 
@@ -252,8 +257,9 @@ def create_email_payload(template_id, context, to_emails):
     }
 
 
-def create_sms_payload(phone_num):
+def create_sms_payload(phone_num, language):
     return {
+        "language": language,
         "phone_num": phone_num,
     }
 
@@ -437,7 +443,9 @@ def create_offering_notifications():
                             )
                             print(message_for_host)
                             fnc_publish_message(message_for_host)
-                            fnc_publish_sms(create_sms_payload(host_row["phone_num"]))
+                            fnc_publish_sms(
+                                create_sms_payload(host_row["phone_num"], Language.PL.value)
+                            )
 
                         if match["fnc_guest_status"] == MatchesStatus.DEFAULT.value:
                             message_for_guest = (
@@ -447,7 +455,9 @@ def create_offering_notifications():
                             )
                             print(message_for_guest)
                             fnc_publish_message(message_for_guest)
-                            fnc_publish_sms(create_sms_payload(guest_row["phone_num"]))
+                            fnc_publish_sms(
+                                create_sms_payload(guest_row["phone_num"], Language.UA.value)
+                            )
 
                 upd_matches_status = (
                     tbl_matches.update()
