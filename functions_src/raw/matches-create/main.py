@@ -23,6 +23,7 @@ current_iteration = datetime.datetime.now()
 
 # IMPORTANT Order of values must be ascending!!!!
 DURATION_CATEGORIES = ["less_than_1_week", "1_week", "2_3_weeks", "month", "longer"]
+MATCH_TIMEOUT_HOURS = 12
 
 
 def query_configuration_context(secret_id):
@@ -109,7 +110,7 @@ class HostListing:
 
     rid: str
     name: str
-    last_modification_date: datetime.datetime
+    registration_date: datetime.datetime
     listing_country: str
     listing_city: str
     shelter_type: str
@@ -130,6 +131,7 @@ class GuestListing:
 
     rid: str
     name: str
+    registration_date: datetime.datetime
     listing_country: str
     listing_city: str
     beds: int
@@ -147,7 +149,7 @@ class GuestListing:
 
 
 # region DataScience functions
-def evaluate_pair(host, guest):
+def evaluate_pair(host: HostListing, guest: GuestListing, historical_matches):
     """Check whether a `host` could potentially satisfy a `guest`'s needs.
 
     Return 0.0 if match is impossible.
@@ -156,63 +158,76 @@ def evaluate_pair(host, guest):
     The higher the score, the better fit there is between the host and the guest.
     """
 
-    if host.listing_country != guest.listing_country:
+    # Hard constraints
+    if guest.listing_country != host.listing_country:
         return 0.0
-
-    if host.shelter_type not in guest.acceptable_shelter_types:
+    if guest.is_pregnant and not host.ok_for_pregnant:
         return 0.0
-
-    if host.beds < guest.beds:
+    if guest.is_with_disability and not host.ok_for_disabilities:
         return 0.0
-
-    if guest.group_relation not in host.acceptable_group_relations:
+    if guest.is_with_animal and not host.ok_for_animals:
         return 0.0
-
-    # if not host.ok_for_pregnant and guest.is_pregnant:
-    #     return 0.0
-
-    # if not host.ok_for_disabilities and guest.is_with_disability:
-    #     return 0.0
-
-    # if not host.ok_for_animals and guest.is_with_animal:
-    #     return 0.0
-
-    # if not host.ok_for_elderly and guest.is_with_elderly:
-    #     return 0.0
-
-    if not host.ok_for_any_nationality and not guest.is_ukrainian_nationality:
+    if guest.is_with_elderly and not host.ok_for_elderly:
         return 0.0
-
+    if not guest.is_ukrainian_nationality and not host.ok_for_any_nationality:
+        return 0.0
     if host.duration_category < guest.duration_category:
         return 0.0
+    if guest.group_relation not in host.acceptable_group_relations:
+        return 0.0
+    if host.shelter_type not in guest.acceptable_shelter_types:
+        return 0.0
+    if host.beds < guest.beds:
+        return 0.0
+    if (host.rid, guest.rid) in historical_matches:
+        return 0.0
 
-    empty_beds = host.beds - guest.beds
+    # Soft constraints
 
-    listing_age_in_days = (datetime.datetime.now() - host.last_modification_date).days
+    # Score composition:
+    #  1% -> Guarant -> after passing hard constrants people should be ready to match
+    # 78% -> City match
+    #  1% -> Transport included
+    #  5% -> Boosters for host activity related to response rate for previous offers
+    #  5% -> Boosters for recency of host registration
+    #  5% -> Boosters for guest activity related to response rate for previous offers
+    #  5% -> Boosters for recency of guest registration
 
-    score = 0.0
+    score = 0.01
 
-    score += 0.4 * (1.0 - min(empty_beds, 4) / 4.0)
+    if host.listing_city == guest.listing_city or guest.listing_city is None:
+        score += 0.78
 
-    score += 0.2 * int(host.listing_city == guest.listing_city)
+    # -> Transport included
+    score += 0.01 * int(host.transport_included)
 
-    score += 0.2 * (listing_age_in_days / 7.0)
+    # -> Boosters for host activity related to response rate for previous offers
+    # TODO
 
-    score += 0.1 * int(host.transport_included)
+    # -> Boosters for recency of host registration
+    host_listing_age = age_in_hours(host.registration_date)
+    score += 0.05 * max(0.0, 1.0 - float(host_listing_age) / 2.0 / float(MATCH_TIMEOUT_HOURS))
 
-    score += 0.1 * int(host.duration_category == guest.duration_category)
+    # -> Boosters for guest activity related to response rate for previous offers
+    # TODO
 
-    print(f"probing match (guest={guest.rid}, host={host.rid}) with scoring {score}")
+    # -> Boosters for recency of guest registration
+    guest_listing_age = age_in_hours(guest.registration_date)
+    score += 0.05 * max(
+        0.0, 1.0 - float(guest_listing_age) / 2.0 / float(MATCH_TIMEOUT_HOURS)
+    )
 
     return score
 
 
-def find_matches(hosts, guests):
+def find_matches(hosts, guests, historical_matches):
     """Match hosts and guests, maximizing the sum of matching scores.  Return matched pairs."""
 
     # Set up the cost matrix.  As the Hungarian algorithm minimizes cost,
     # use negative score as cost in order to maximize score
-    cost_matrix = np.array([[-evaluate_pair(h, g) for g in guests] for h in hosts])
+    cost_matrix = np.array(
+        [[-evaluate_pair(h, g, historical_matches) for g in guests] for h in hosts]
+    )
 
     if DEBUG:
         print("Guests:")
@@ -267,6 +282,7 @@ def create_guests_table_mapping():
         Column("name", VARCHAR),
         Column("city", VARCHAR),
         Column("fnc_status", VARCHAR),
+        Column("fnc_ts_registered", VARCHAR),
         Column("listing_country", VARCHAR),
         Column("acceptable_shelter_types", VARCHAR),
         Column("beds", VARCHAR),
@@ -325,6 +341,11 @@ def query_string(input_text):
 
 def epoch_with_milliseconds_to_datetime(input):
     return datetime.datetime.fromtimestamp(int(input[:-3]))
+
+
+def age_in_hours(t: datetime.datetime):
+    n = datetime.datetime.now()
+    return (n - t).days * 24 + int((n - t).seconds / 3600)
 
 
 def default_value(value: str, default: str):
@@ -389,6 +410,7 @@ def fnc_target(event, context):
 def create_matching(pubsub_msg):
     HOSTS_MATCHING_BATCH_SIZE = configuration_context["HOSTS_MATCHING_BATCH_SIZE"]
     GUESTS_MATCHING_BATCH_SIZE = configuration_context["GUESTS_MATCHING_BATCH_SIZE"]
+    MATCH_TIMEOUT_HOURS = configuration_context["MATCH_TIMEOUT_HOURS"]
 
     tbl_matches = create_matches_table_mapping()
     tbl_guests = create_guests_table_mapping()
@@ -414,7 +436,7 @@ def create_matching(pubsub_msg):
                     HostListing(
                         rid=row["db_hosts_id"],
                         name=row["name"],
-                        last_modification_date=epoch_with_milliseconds_to_datetime(
+                        registration_date=epoch_with_milliseconds_to_datetime(
                             row["fnc_ts_registered"]
                         ),
                         listing_country=default_value(row["listing_country"], "poland"),
@@ -474,6 +496,9 @@ def create_matching(pubsub_msg):
                     GuestListing(
                         rid=row["db_guests_id"],
                         name=row["name"],
+                        registration_date=epoch_with_milliseconds_to_datetime(
+                            row["fnc_ts_registered"]
+                        ),
                         listing_country=default_value(row["listing_country"], "poland"),
                         listing_city=row["city"],
                         beds=int(row["beds"]),
@@ -508,8 +533,21 @@ def create_matching(pubsub_msg):
                 )
     # endregion
 
+    # region Getting historical matches
+
+    with db.connect() as conn:
+        with conn.begin():
+
+            sel_matches = tbl_matches.select()
+            result = conn.execute(sel_matches)
+            historical_matches = [
+                (m["fnc_hosts_id"], m["fnc_guests_id"]) for m in result
+            ]
+
+    # endregion'
+
     # region Looking for matches
-    matches = find_matches(hosts, guests)
+    matches = find_matches(hosts, guests, historical_matches)
     print(f"found best matches in iteration {current_iteration}: {len(matches)}")
 
     with db.connect() as conn:
