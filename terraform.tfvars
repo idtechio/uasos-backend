@@ -62,3 +62,6 @@ gcf_matches-create-offering-notifications_pubsub_topic_name = "matches-create-of
 
 gcf_unsubscribe-user_name = "unsubscribe-user"
 gcf_unsubscribe-user_pubsub_topic_name = "unsubscribe-user"
+
+gcf_remove-users-by-email_name = "remove-users-by-email"
+gcf_remove-users-by-email_pubsub_topic_name = "remove-users-by-email"
