@@ -206,3 +206,13 @@ variable "gcf_matches-create-offering-notifications_pubsub_topic_name" {
   type        = string
   description = "gcf_matches-create-offering-notifications_pubsub_topic_name"
 }
+
+variable "gcf_unsubscribe-user_name" {
+  description = "gcf_unsubscribe-user_name"
+  type        = string
+}
+
+variable "gcf_unsubscribe-user_pubsub_topic_name" {
+  type        = string
+  description = "gcf_unsubscribe-user_pubsub_topic_name"
+}
