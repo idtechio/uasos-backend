@@ -23,7 +23,7 @@ current_iteration = datetime.datetime.now()
 
 # IMPORTANT Order of values must be ascending!!!!
 DURATION_CATEGORIES = ["less_than_1_week", "1_week", "2_3_weeks", "month", "longer"]
-MATCH_TIMEOUT_HOURS = 12
+MATCH_TIMEOUT_HOURS = None
 
 
 def query_configuration_context(secret_id):
@@ -435,6 +435,7 @@ def fnc_target(event, context):
 def create_matching(pubsub_msg):
     HOSTS_MATCHING_BATCH_SIZE = configuration_context["HOSTS_MATCHING_BATCH_SIZE"]
     GUESTS_MATCHING_BATCH_SIZE = configuration_context["GUESTS_MATCHING_BATCH_SIZE"]
+    global MATCH_TIMEOUT_HOURS
     MATCH_TIMEOUT_HOURS = configuration_context["MATCH_TIMEOUT_HOURS"]
 
     tbl_matches = create_matches_table_mapping()
@@ -575,7 +576,7 @@ def create_matching(pubsub_msg):
                 int(
                     (
                         datetime.datetime.now()
-                        - datetime.timedelta(hours=2 * int(MATCH_TIMEOUT_HOURS))
+                        - datetime.timedelta(hours=3 * int(MATCH_TIMEOUT_HOURS))
                     ).timestamp()
                     * 1000
                 )
@@ -588,7 +589,9 @@ def create_matching(pubsub_msg):
     # endregion
 
     # region Looking for matches
-    matches = find_matches(hosts, guests, recent_matches, rid_pairs)
+    matches = []
+    if len(hosts) > 0 and len(guests) > 0:
+        matches = find_matches(hosts, guests, recent_matches, rid_pairs)
     print(f"found best matches in iteration {current_iteration}: {len(matches)}")
 
     with db.connect() as conn:
