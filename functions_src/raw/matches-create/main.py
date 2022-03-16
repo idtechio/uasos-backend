@@ -13,7 +13,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import Table
 from sqlalchemy import MetaData
 from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import *
+from sqlalchemy.dialects.postgresql import VARCHAR
 
 from google.cloud import secretmanager
 from dotenv import load_dotenv
@@ -23,7 +23,7 @@ current_iteration = datetime.datetime.now()
 
 # IMPORTANT Order of values must be ascending!!!!
 DURATION_CATEGORIES = ["less_than_1_week", "1_week", "2_3_weeks", "month", "longer"]
-MATCH_TIMEOUT_HOURS = 12
+MATCH_TIMEOUT_HOURS = None
 
 
 def query_configuration_context(secret_id):
@@ -44,7 +44,7 @@ if not running_locally:
         os.environ["SECRET_CONFIGURATION_CONTEXT"]
     )
 else:
-    print(f"Running locally")
+    print("Running locally")
     load_dotenv()
 
 
@@ -149,7 +149,7 @@ class GuestListing:
 
 
 # region DataScience functions
-def evaluate_pair(host: HostListing, guest: GuestListing, historical_matches):
+def evaluate_pair(host: HostListing, guest: GuestListing, recent_matches, rid_pairs):
     """Check whether a `host` could potentially satisfy a `guest`'s needs.
 
     Return 0.0 if match is impossible.
@@ -179,7 +179,7 @@ def evaluate_pair(host: HostListing, guest: GuestListing, historical_matches):
         return 0.0
     if host.beds < guest.beds:
         return 0.0
-    if (host.rid, guest.rid) in historical_matches:
+    if (host.rid, guest.rid) in rid_pairs:
         return 0.0
 
     # Soft constraints
@@ -189,8 +189,8 @@ def evaluate_pair(host: HostListing, guest: GuestListing, historical_matches):
     # 78% -> City match
     #  1% -> Transport included
     #  5% -> Boosters for host activity related to response rate for previous offers
-    #  5% -> Boosters for recency of host registration
     #  5% -> Boosters for guest activity related to response rate for previous offers
+    #  5% -> Boosters for recency of host registration
     #  5% -> Boosters for recency of guest registration
 
     score = 0.01
@@ -201,17 +201,37 @@ def evaluate_pair(host: HostListing, guest: GuestListing, historical_matches):
     # -> Transport included
     score += 0.01 * int(host.transport_included)
 
-    # -> Boosters for host activity related to response rate for previous offers
-    # TODO
+    # -> Boosters for host and guest activity related to response rate for previous offers
+    # Calculate activity score
+    host_activity_boost = 0
+    guest_activity_boost = 0
+
+    for row in recent_matches:
+        if row["fnc_hosts_id"] == host.rid and (
+            row["fnc_host_status"] == MatchesStatus.MATCH_ACCEPTED.value
+            or row["fnc_host_status"] == MatchesStatus.MATCH_REJECTED.value
+        ):
+            if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
+                host_activity_boost += 3
+            if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
+                host_activity_boost += 1
+        if row["fnc_guests_id"] == guest.rid and (
+            row["fnc_guest_status"] == MatchesStatus.MATCH_ACCEPTED.value
+            or row["fnc_guest_status"] == MatchesStatus.MATCH_REJECTED.value
+        ):
+            if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
+                guest_activity_boost += 3
+            if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
+                guest_activity_boost += 1
+
+    score += 0.05 * float(min(6, host_activity_boost) / 6.0)
+    score += 0.05 * float(min(6, guest_activity_boost) / 6.0)
 
     # -> Boosters for recency of host registration
     host_listing_age = age_in_hours(host.registration_date)
     score += 0.05 * max(
         0.0, 1.0 - float(host_listing_age) / 2.0 / float(MATCH_TIMEOUT_HOURS)
     )
-
-    # -> Boosters for guest activity related to response rate for previous offers
-    # TODO
 
     # -> Boosters for recency of guest registration
     guest_listing_age = age_in_hours(guest.registration_date)
@@ -222,13 +242,16 @@ def evaluate_pair(host: HostListing, guest: GuestListing, historical_matches):
     return score
 
 
-def find_matches(hosts, guests, historical_matches):
+def find_matches(hosts, guests, recent_matches, rid_pairs):
     """Match hosts and guests, maximizing the sum of matching scores.  Return matched pairs."""
 
     # Set up the cost matrix.  As the Hungarian algorithm minimizes cost,
     # use negative score as cost in order to maximize score
     cost_matrix = np.array(
-        [[-evaluate_pair(h, g, historical_matches) for g in guests] for h in hosts]
+        [
+            [-evaluate_pair(h, g, recent_matches, rid_pairs) for g in guests]
+            for h in hosts
+        ]
     )
 
     if DEBUG:
@@ -412,6 +435,7 @@ def fnc_target(event, context):
 def create_matching(pubsub_msg):
     HOSTS_MATCHING_BATCH_SIZE = configuration_context["HOSTS_MATCHING_BATCH_SIZE"]
     GUESTS_MATCHING_BATCH_SIZE = configuration_context["GUESTS_MATCHING_BATCH_SIZE"]
+    global MATCH_TIMEOUT_HOURS
     MATCH_TIMEOUT_HOURS = configuration_context["MATCH_TIMEOUT_HOURS"]
 
     tbl_matches = create_matches_table_mapping()
@@ -544,14 +568,30 @@ def create_matching(pubsub_msg):
 
             sel_matches = tbl_matches.select()
             result = conn.execute(sel_matches)
-            historical_matches = [
-                (m["fnc_hosts_id"], m["fnc_guests_id"]) for m in result
-            ]
+            rid_pairs = []
+            recent_matches = []
+            # day filter equals 3* timeout. If it would be 2*timeout we would almost always cut of the match whose timeout is
+            # approxemetely 2 timeouts ago.
+            day_filter = str(
+                int(
+                    (
+                        datetime.datetime.now()
+                        - datetime.timedelta(hours=3 * int(MATCH_TIMEOUT_HOURS))
+                    ).timestamp()
+                    * 1000
+                )
+            )
+            for row in result:
+                rid_pairs.append((row["fnc_hosts_id"], row["fnc_guests_id"]))
+                if row["fnc_ts_matched"] > day_filter:
+                    recent_matches.append(row)
 
-    # endregion'
+    # endregion
 
     # region Looking for matches
-    matches = find_matches(hosts, guests, historical_matches)
+    matches = []
+    if len(hosts) > 0 and len(guests) > 0:
+        matches = find_matches(hosts, guests, recent_matches, rid_pairs)
     print(f"found best matches in iteration {current_iteration}: {len(matches)}")
 
     with db.connect() as conn:
