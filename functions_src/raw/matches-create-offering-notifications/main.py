@@ -271,9 +271,17 @@ def query_acceptance_url(matches_id, accept_value, side):
     )
 
 
+def query_listing_delete_url(listing_email, listing_id, side):
+    template_url = configuration_context["LISTING_DELETE_URL_TEMPLATE"]
+    return template_url.format(
+        listing_email=listing_email, listing_id=listing_id, side=side.value
+    )
+
+
 def create_paylod_for_guest_get_match_template(matches_id, host_row, guest_row):
     print("preparing payload with context for 'GuestGetMatch' SendGrid template")
-    template_id = "d-d1db97e9b1e34a15ac13bc253f26c049"
+    # template_id = "d-d1db97e9b1e34a15ac13bc253f26c049" # without url_listing_delete FIXME clean up
+    template_id = "d-fc675a4d49384ea297223df70dfbc872" # with url_listing_delete
 
     context = {
         "host_name": host_row["name"],
@@ -292,6 +300,9 @@ def create_paylod_for_guest_get_match_template(matches_id, host_row, guest_row):
         "url_reject": query_acceptance_url(
             matches_id, MatchAcceptanceDecision.REJECTED, MatchAcceptanceSide.GUEST
         ),
+        "url_listing_delete": query_listing_delete_url(
+            guest_row["email"], guest_row["db_guests_id"], MatchAcceptanceSide.GUEST
+        ),
     }
 
     return create_email_payload(
@@ -303,7 +314,8 @@ def create_paylod_for_guest_get_match_template(matches_id, host_row, guest_row):
 
 def create_paylod_for_host_get_match_template(matches_id, guest_row, host_row):
     print("preparing payload with context for 'HostGetMatch' SendGrid template")
-    template_id = "d-0752c2653cec4c3cbc69820605221878"
+    # template_id = "d-0752c2653cec4c3cbc69820605221878" # without url_listing_delete FIXME clean up
+    template_id = "d-d6e35cda42e343089dd03d2b03b84ffe" # with url_listing_delete
 
     context = {
         "guest_name": guest_row["name"],
@@ -322,6 +334,9 @@ def create_paylod_for_host_get_match_template(matches_id, guest_row, host_row):
         ),
         "url_reject": query_acceptance_url(
             matches_id, MatchAcceptanceDecision.REJECTED, MatchAcceptanceSide.HOST
+        ),
+        "url_listing_delete": query_listing_delete_url(
+            host_row["email"], host_row["db_hosts_id"], MatchAcceptanceSide.HOST
         ),
     }
 
