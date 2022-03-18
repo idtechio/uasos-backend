@@ -338,6 +338,6 @@ module "gcf_listing-delete" {
     SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
     HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
     GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
-    LISTING_DELETE_TOPIC= "${var.gcf_listing-delete_pubsub_topic_name}"
+    LISTING_DELETE_TOPIC= "${var.gcf_unsubscribe-user_pubsub_topic_name}"
   }
 }
