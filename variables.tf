@@ -137,16 +137,6 @@ variable "gcf_matches-create_pubsub_topic_name" {
   description = "gcf_matches-create_pubsub_topic_name"
 }
 
-variable "gcf_matches-create-notifications_name" {
-  description = "gcf_matches-create-notifications_name"
-  type        = string
-}
-
-variable "gcf_matches-create-notifications_pubsub_topic_name" {
-  type        = string
-  description = "gcf_matches-create-notifications_pubsub_topic_name"
-}
-
 variable "gcf_matches_process_rejections_name" {
   description = "gcf_matches_process_rejections_name"
   type        = string
@@ -225,4 +215,14 @@ variable "gcf_remove-users-by-email_name" {
 variable "gcf_remove-users-by-email_pubsub_topic_name" {
   type        = string
   description = "gcf_remove-users-by-email_pubsub_topic_name"
+}
+
+variable "gcf_listing-delete_name" {
+  description = "gcf_listing-delete_name"
+  type        = string
+}
+
+variable "gcf_listing-delete_pubsub_topic_name" {
+  type        = string
+  description = "gcf_listing-delete_pubsub_topic_name"
 }

@@ -317,3 +317,27 @@ module "gcf_remove-users-by-email" {
   }
 }
 
+module "gcf_listing-delete" {
+  source = "./modules/functions"
+  project_id = "${var.project_id}"
+  region = "${var.region}"
+
+  fnc_name    = "${var.gcf_listing-delete_name}"
+  fnc_folder  = "${var.gcf_listing-delete_name}"
+  fnc_target  = "${var.gcf_target}"
+  fnc_memory  = "${var.gcf_memory}"
+  fnc_timeout = "${var.gcf_timeout}"
+
+  fnc_pubsub_topic_name = "${var.gcf_listing-delete_pubsub_topic_name}"
+
+  fnc_service_account = "${module.gcf_sa.email}"
+
+  environment_variables = {
+    PROJECT_ID= "${var.project_id}"
+    DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
+    SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+    HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+    GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+    LISTING_DELETE_TOPIC= "${var.gcf_listing-delete_pubsub_topic_name}"
+  }
+}

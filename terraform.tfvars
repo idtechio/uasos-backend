@@ -65,3 +65,6 @@ gcf_unsubscribe-user_pubsub_topic_name = "unsubscribe-user"
 
 gcf_remove-users-by-email_name = "remove-users-by-email"
 gcf_remove-users-by-email_pubsub_topic_name = "remove-users-by-email"
+
+gcf_listing-delete_name = "listing-delete"
+gcf_listing-delete_pubsub_topic_name = "listing-delete"
