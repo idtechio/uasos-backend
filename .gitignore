@@ -7,3 +7,5 @@
 
 .idea/
 .vscode/
+
+**/functions_src/compressed
