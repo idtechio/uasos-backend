@@ -48,9 +48,9 @@ def send_notification(pubsub_msg):
 
     body = ""
     if language == Language.PL.value:
-        body = "Mamy dla Ciebie kontakt!Sprawdz e-mail/spam i potwierdz."
+        body = "We have a contact for you! Check your email and confirm." # FIXME Use proper enum/message pair
     elif language == Language.UA.value:
-        body = "У нас є для Вас контакт!Перевірте імейл (спам) та дайте відповідь"
+        body = "У нас є для Вас контакт! Перевірте імейл (спам) та дайте відповідь"
 
     try:
         client = TwilioClient(
