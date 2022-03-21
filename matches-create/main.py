@@ -181,22 +181,20 @@ def evaluate_pair(host: HostListing, guest: GuestListing, recent_matches, rid_pa
         return 0.0
     if (host.rid, guest.rid) in rid_pairs:
         return 0.0
+    if host.listing_city != guest.listing_city and guest.listing_city is not None:
+        return 0.0
 
     # Soft constraints
 
     # Score composition:
     #  1% -> Guarant -> after passing hard constrants people should be ready to match
-    # 78% -> City match
     #  1% -> Transport included
     #  5% -> Boosters for host activity related to response rate for previous offers
     #  5% -> Boosters for guest activity related to response rate for previous offers
     #  5% -> Boosters for recency of host registration
     #  5% -> Boosters for recency of guest registration
 
-    score = 0.01
-
-    if host.listing_city == guest.listing_city or guest.listing_city is None:
-        score += 0.78
+    score = 0.79
 
     # -> Transport included
     score += 0.01 * int(host.transport_included)
