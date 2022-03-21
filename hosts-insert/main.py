@@ -84,7 +84,7 @@ def create_hosts_table_mapping():
         Column("fnc_status", VARCHAR),
         Column("fnc_score", INTEGER),
         Column("name", VARCHAR),
-        Column("country", VARCHAR),
+        # Column("country", VARCHAR), # FIXME: misleading field name
         Column("phone_num", VARCHAR),
         Column("email", VARCHAR),
         Column("city", VARCHAR),
@@ -129,7 +129,7 @@ def postgres_insert(db, pubsub_msg):
         fnc_status=HostsGuestsStatus.MOD_ACCEPTED,
         fnc_score=5,
         name=pubsub_msg.get("name", VALUE_NOT_PROVIDED),
-        country=pubsub_msg.get("country", VALUE_NOT_PROVIDED),
+        # country=pubsub_msg.get("country", VALUE_NOT_PROVIDED),  # FIXME: misleading field name
         phone_num=pubsub_msg.get("phone_num", VALUE_NOT_PROVIDED),
         email=pubsub_msg.get("email", VALUE_NOT_PROVIDED),
         city=pubsub_msg.get("city", VALUE_NOT_PROVIDED),
@@ -139,7 +139,7 @@ def postgres_insert(db, pubsub_msg):
         num_people=pubsub_msg.get("num_people", VALUE_NOT_PROVIDED),
         period=pubsub_msg.get("period", VALUE_NOT_PROVIDED),
         pietro=pubsub_msg.get("pietro", VALUE_NOT_PROVIDED),
-        listing_country=pubsub_msg.get("listing_country", VALUE_NOT_PROVIDED),
+        listing_country=pubsub_msg.get("country", VALUE_NOT_PROVIDED),  # FIXME: TBD field name
         shelter_type=pubsub_msg.get("shelter_type", VALUE_NOT_PROVIDED),
         beds=pubsub_msg.get("beds", VALUE_NOT_PROVIDED),
         acceptable_group_relations=pubsub_msg.get(
