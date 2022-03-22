@@ -84,7 +84,7 @@ def create_hosts_table_mapping():
         Column("fnc_status", VARCHAR),
         Column("fnc_score", INTEGER),
         Column("name", VARCHAR),
-        # Column("country", VARCHAR), # FIXME: misleading field name
+        Column("country", VARCHAR),  # FIXME: misleading field name
         Column("phone_num", VARCHAR),
         Column("email", VARCHAR),
         Column("city", VARCHAR),
