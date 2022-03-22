@@ -571,8 +571,12 @@ def create_matching(pubsub_msg):
     with db.connect() as conn:
         with conn.begin():
 
-            sel_matches = tbl_matches.select()
-            result = conn.execute(sel_matches)
+            existing_pairs = sqlalchemy.text(
+        f"SELECT ma.fnc_ts_matched, ma.fnc_hosts_id, ma.fnc_guests_id FROM matches ma JOIN hosts ho ON ma.fnc_hosts_id = ho.db_hosts_id JOIN guests gu ON ma.fnc_guests_id = gu.db_guests_id WHERE ho.fnc_status = '075' OR gu.fnc_status = '075';"
+            )
+            # sel_matches = tbl_matches.select()
+            # result = conn.execute(sel_matches)
+            result = conn.execute(existing_pairs)
             rid_pairs = []
             recent_matches = []
             # day filter equals 3* timeout. If it would be 2*timeout we would almost always cut of the match whose timeout is
