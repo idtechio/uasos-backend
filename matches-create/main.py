@@ -199,31 +199,31 @@ def evaluate_pair(host: HostListing, guest: GuestListing, recent_matches, rid_pa
     # -> Transport included
     score += 0.01 * int(host.transport_included)
 
-    # -> Boosters for host and guest activity related to response rate for previous offers
+    # -> Boosters for host and guest activity related to response rate for previous offers #FIXME Optimize execution (otherwise function invocations may time out)
     # Calculate activity score
-    host_activity_boost = 0
-    guest_activity_boost = 0
+    # host_activity_boost = 0
+    # guest_activity_boost = 0
 
-    for row in recent_matches:
-        if row["fnc_hosts_id"] == host.rid and (
-            row["fnc_host_status"] == MatchesStatus.MATCH_ACCEPTED.value
-            or row["fnc_host_status"] == MatchesStatus.MATCH_REJECTED.value
-        ):
-            if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
-                host_activity_boost += 3
-            if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
-                host_activity_boost += 1
-        if row["fnc_guests_id"] == guest.rid and (
-            row["fnc_guest_status"] == MatchesStatus.MATCH_ACCEPTED.value
-            or row["fnc_guest_status"] == MatchesStatus.MATCH_REJECTED.value
-        ):
-            if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
-                guest_activity_boost += 3
-            if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
-                guest_activity_boost += 1
+    # for row in recent_matches:
+    #     if row["fnc_hosts_id"] == host.rid and (
+    #         row["fnc_host_status"] == MatchesStatus.MATCH_ACCEPTED.value
+    #         or row["fnc_host_status"] == MatchesStatus.MATCH_REJECTED.value
+    #     ):
+    #         if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
+    #             host_activity_boost += 3
+    #         if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
+    #             host_activity_boost += 1
+    #     if row["fnc_guests_id"] == guest.rid and (
+    #         row["fnc_guest_status"] == MatchesStatus.MATCH_ACCEPTED.value
+    #         or row["fnc_guest_status"] == MatchesStatus.MATCH_REJECTED.value
+    #     ):
+    #         if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
+    #             guest_activity_boost += 3
+    #         if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
+    #             guest_activity_boost += 1
 
-    score += 0.05 * float(min(6, host_activity_boost) / 6.0)
-    score += 0.05 * float(min(6, guest_activity_boost) / 6.0)
+    # score += 0.05 * float(min(6, host_activity_boost) / 6.0)
+    # score += 0.05 * float(min(6, guest_activity_boost) / 6.0)
 
     # -> Boosters for recency of host registration
     host_listing_age = age_in_hours(host.registration_date)
@@ -457,7 +457,7 @@ def create_matching(pubsub_msg):
             result = conn.execute(sel_hosts)
 
             for row in result:
-                print(epoch_with_milliseconds_to_datetime(row["fnc_ts_registered"]))
+                # print(epoch_with_milliseconds_to_datetime(row["fnc_ts_registered"]))
 
                 hosts.append(
                     HostListing(
