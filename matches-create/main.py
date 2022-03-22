@@ -201,29 +201,29 @@ def evaluate_pair(host: HostListing, guest: GuestListing, recent_matches, rid_pa
 
     # -> Boosters for host and guest activity related to response rate for previous offers #FIXME Optimize execution (otherwise function invocations may time out)
     # Calculate activity score
-    # host_activity_boost = 0
-    # guest_activity_boost = 0
+    host_activity_boost = 0
+    guest_activity_boost = 0
 
-    # for row in recent_matches:
-    #     if row["fnc_hosts_id"] == host.rid and (
-    #         row["fnc_host_status"] == MatchesStatus.MATCH_ACCEPTED.value
-    #         or row["fnc_host_status"] == MatchesStatus.MATCH_REJECTED.value
-    #     ):
-    #         if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
-    #             host_activity_boost += 3
-    #         if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
-    #             host_activity_boost += 1
-    #     if row["fnc_guests_id"] == guest.rid and (
-    #         row["fnc_guest_status"] == MatchesStatus.MATCH_ACCEPTED.value
-    #         or row["fnc_guest_status"] == MatchesStatus.MATCH_REJECTED.value
-    #     ):
-    #         if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
-    #             guest_activity_boost += 3
-    #         if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
-    #             guest_activity_boost += 1
+    for row in recent_matches:
+        if row["fnc_hosts_id"] == host.rid and (
+            row["fnc_host_status"] == MatchesStatus.MATCH_ACCEPTED.value
+            or row["fnc_host_status"] == MatchesStatus.MATCH_REJECTED.value
+        ):
+            if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
+                host_activity_boost += 3
+            if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
+                host_activity_boost += 1
+        if row["fnc_guests_id"] == guest.rid and (
+            row["fnc_guest_status"] == MatchesStatus.MATCH_ACCEPTED.value
+            or row["fnc_guest_status"] == MatchesStatus.MATCH_REJECTED.value
+        ):
+            if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
+                guest_activity_boost += 3
+            if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
+                guest_activity_boost += 1
 
-    # score += 0.05 * float(min(6, host_activity_boost) / 6.0)
-    # score += 0.05 * float(min(6, guest_activity_boost) / 6.0)
+    score += 0.05 * float(min(6, host_activity_boost) / 6.0)
+    score += 0.05 * float(min(6, guest_activity_boost) / 6.0)
 
     # -> Boosters for recency of host registration
     host_listing_age = age_in_hours(host.registration_date)
@@ -571,13 +571,18 @@ def create_matching(pubsub_msg):
     with db.connect() as conn:
         with conn.begin():
 
-            existing_pairs = sqlalchemy.text(
+            # Create rid_pairs set
+            existing_pairs_stmt = sqlalchemy.text(
                 f"SELECT DISTINCT ma.fnc_ts_matched, ma.fnc_hosts_id, ma.fnc_guests_id FROM matches ma JOIN hosts ho ON ma.fnc_hosts_id = ho.db_hosts_id JOIN guests gu ON ma.fnc_guests_id = gu.db_guests_id WHERE ho.fnc_status = '075' OR gu.fnc_status = '075';"
             )
-            # sel_matches = tbl_matches.select()
-            # result = conn.execute(sel_matches)
-            result = conn.execute(existing_pairs)
+            existing_pairs_result = conn.execute(existing_pairs_stmt)
             rid_pairs = set()
+            for row in existing_pairs_result:
+                rid_pairs.add((row["fnc_hosts_id"], row["fnc_guests_id"]))
+                
+            # Create recent_matches list
+            sel_matches_stmt = tbl_matches.select()
+            sel_matches_result = conn.execute(sel_matches_stmt)
             recent_matches = []
             # day filter equals 3* timeout. If it would be 2*timeout we would almost always cut of the match whose timeout is
             # approxemetely 2 timeouts ago.
@@ -590,8 +595,7 @@ def create_matching(pubsub_msg):
                     * 1000
                 )
             )
-            for row in result:
-                rid_pairs.add((row["fnc_hosts_id"], row["fnc_guests_id"]))
+            for row in sel_matches_result:
                 if row["fnc_ts_matched"] > day_filter:
                     recent_matches.append(row)
 
