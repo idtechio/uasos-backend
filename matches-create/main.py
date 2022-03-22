@@ -572,12 +572,12 @@ def create_matching(pubsub_msg):
         with conn.begin():
 
             existing_pairs = sqlalchemy.text(
-        f"SELECT ma.fnc_ts_matched, ma.fnc_hosts_id, ma.fnc_guests_id FROM matches ma JOIN hosts ho ON ma.fnc_hosts_id = ho.db_hosts_id JOIN guests gu ON ma.fnc_guests_id = gu.db_guests_id WHERE ho.fnc_status = '075' OR gu.fnc_status = '075';"
+                f"SELECT DISTINCT ma.fnc_ts_matched, ma.fnc_hosts_id, ma.fnc_guests_id FROM matches ma JOIN hosts ho ON ma.fnc_hosts_id = ho.db_hosts_id JOIN guests gu ON ma.fnc_guests_id = gu.db_guests_id WHERE ho.fnc_status = '075' OR gu.fnc_status = '075';"
             )
             # sel_matches = tbl_matches.select()
             # result = conn.execute(sel_matches)
             result = conn.execute(existing_pairs)
-            rid_pairs = []
+            rid_pairs = set()
             recent_matches = []
             # day filter equals 3* timeout. If it would be 2*timeout we would almost always cut of the match whose timeout is
             # approxemetely 2 timeouts ago.
@@ -591,7 +591,7 @@ def create_matching(pubsub_msg):
                 )
             )
             for row in result:
-                rid_pairs.append((row["fnc_hosts_id"], row["fnc_guests_id"]))
+                rid_pairs.add((row["fnc_hosts_id"], row["fnc_guests_id"]))
                 if row["fnc_ts_matched"] > day_filter:
                     recent_matches.append(row)
 
