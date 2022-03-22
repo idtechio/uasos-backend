@@ -18,7 +18,7 @@ from sqlalchemy.dialects.postgresql import VARCHAR
 from google.cloud import secretmanager
 from dotenv import load_dotenv
 
-DEBUG = True  # FIXME :)
+DEBUG = False  # FIXME :)
 current_iteration = datetime.datetime.now()
 
 # IMPORTANT Order of values must be ascending!!!!
@@ -245,12 +245,14 @@ def find_matches(hosts, guests, recent_matches, rid_pairs):
 
     # Set up the cost matrix.  As the Hungarian algorithm minimizes cost,
     # use negative score as cost in order to maximize score
+    print("Creating cost_matrix")
     cost_matrix = np.array(
         [
             [-evaluate_pair(h, g, recent_matches, rid_pairs) for g in guests]
             for h in hosts
         ]
     )
+    print("Finished creating cost_matrix")
 
     if DEBUG:
         print("Guests:")
@@ -441,6 +443,7 @@ def create_matching(pubsub_msg):
     tbl_hosts = create_hosts_table_mapping()
 
     # region Preparing hosts dataset
+    print("Preparing hosts dataset")
     hosts = []
 
     sel_hosts = (
@@ -491,10 +494,11 @@ def create_matching(pubsub_msg):
                         transport_included=False,  # FIXME: placeholder
                     )
                 )
-                print(f"added to HOSTS list {row['db_hosts_id']}")
+                # print(f"added to HOSTS list {row['db_hosts_id']}")
 
             if DEBUG:
                 print(hosts)
+            print("Changing fnc_status to '075' in hosts dataset")
 
             for host in hosts:
                 change_host_status(
@@ -503,6 +507,7 @@ def create_matching(pubsub_msg):
     # endregion
 
     # region Preparing guests dataset
+    print("Preparing guests dataset")
     guests = []
 
     sel_guests = (
@@ -548,10 +553,11 @@ def create_matching(pubsub_msg):
                         ),
                     )
                 )
-                print(f"added to GUESTS list {row['db_guests_id']}")
+                # print(f"added to GUESTS list {row['db_guests_id']}")
 
             if DEBUG:
                 print(guests)
+            print("Changing fnc_status to '075' in guests dataset")
 
             for guest in guests:
                 change_guest_status(
@@ -560,6 +566,7 @@ def create_matching(pubsub_msg):
     # endregion
 
     # region Getting historical matches
+    print("Getting historical matches")
 
     with db.connect() as conn:
         with conn.begin():
@@ -587,15 +594,18 @@ def create_matching(pubsub_msg):
     # endregion
 
     # region Looking for matches
+    print("Looking for matches")
     matches = []
     if len(hosts) > 0 and len(guests) > 0:
         matches = find_matches(hosts, guests, recent_matches, rid_pairs)
-    print(f"found best matches in iteration {current_iteration}: {len(matches)}")
+    # print(f"found best matches in iteration {current_iteration}: {len(matches)}")
+    print(f"found best matches in iteration {current_iteration}")
 
     with db.connect() as conn:
         with conn.begin():
+            print(f"Inserting matches and updating statuses")
             for host, guest in matches:
-                print(f"match (guest={guest.rid}, host={host.rid})")
+                # print(f"match (guest={guest.rid}, host={host.rid})")
 
                 ins_match = tbl_matches.insert().values(
                     fnc_ts_matched=f"{query_epoch_with_milliseconds()}",
