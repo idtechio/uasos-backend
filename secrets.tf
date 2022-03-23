@@ -55,5 +55,5 @@ resource "google_secret_manager_secret_iam_binding" "gcf_secrets" {
 resource "google_project_iam_member" "secret_manager" {
   project = var.project_id
   role    = "roles/secretmanager.admin"
-  member  = "user:bieniek.luk@gmail.com"
+  member  = "group:group-developer@ext.ochk.pl"
 }
