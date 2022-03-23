@@ -51,9 +51,3 @@ resource "google_secret_manager_secret_iam_binding" "gcf_secrets" {
     "serviceAccount:${module.gcf_sa.email}",
   ]
 }
-
-resource "google_project_iam_member" "secret_manager" {
-  project = var.project_id
-  role    = "roles/secretmanager.admin"
-  member  = "group:group-developer@ext.ochk.pl"
-}
