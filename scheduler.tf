@@ -52,3 +52,14 @@ resource "google_cloud_scheduler_job" "gcf_matches-process-rejections-trigger" {
     data       = base64encode("{}")
   }
 }
+
+resource "google_cloud_scheduler_job" "gcf_refresh_beds_stats_trigger" {
+  name        = "gcf_refresh_beds_stats_trigger"
+  description = "gcf_refresh_beds_stats_trigger"
+  schedule    = "20 */5 1 1 *" # every 3 hours
+
+  pubsub_target {
+    topic_name = module.gcf_refresh_beds_stats_materialized_view.pubsub_topic_id
+    data       = base64encode("{}")
+  }
+}
