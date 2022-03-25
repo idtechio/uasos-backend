@@ -60,7 +60,7 @@ db = create_db_engine()
 
 def check_stats():
     with db.connect() as conn:
-        sql = "SELECT m_beds, h_beds, g_beds FROM test_materialized_view;"
+        sql = "SELECT m_beds, h_beds, g_beds FROM beds_statistics;"
         m_beds, h_beds, g_beds  = conn.execute(sql).fetchall()[0]
     
     return {
@@ -69,6 +69,6 @@ def check_stats():
             "requested_beds": g_beds,
         }
 
-def fnc_target(event, context):
+def fnc_target(request):
     dict_response = check_stats(db)
     return json.dumps(dict_response), 200, {'Content-Type': 'application/json'}

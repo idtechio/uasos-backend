@@ -60,7 +60,7 @@ db = create_db_engine()
 
 def refresh_materialized_view(db):
     with db.connect() as conn:
-        conn.execute("REFRESH MATERIALIZED VIEW test_materialized_view;")
+        conn.execute("REFRESH MATERIALIZED VIEW beds_statistics;")
 
 
 def fnc_target(event, context):

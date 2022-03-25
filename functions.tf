@@ -369,8 +369,8 @@ module "gcf_beds_stats" {
   project_id = "${var.project_id}"
   region = "${var.region}"
 
-  fnc_name    = "${var.gcf_refresh_beds_stats_name}"
-  fnc_folder  = "${var.gcf_refresh_beds_stats_name}"
+  fnc_name    = "${var.gcf_beds_stats_name}"
+  fnc_folder  = "${var.gcf_beds_stats_name}"
   fnc_target  = "${var.gcf_target}"
   fnc_memory  = "${var.gcf_memory}"
   fnc_timeout = "${var.gcf_timeout}"
