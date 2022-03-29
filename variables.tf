@@ -237,6 +237,16 @@ variable "gcf_refresh_beds_stats_pubsub_topic_name" {
   description = "gcf_refresh_beds_stats_pubsub_topic_name"
 }
 
+variable "gcf_accounts_upsert_name" {
+  description = "gcf_accounts_upsert_name"
+  type        = string
+}
+
+variable "gcf_accounts_upsert_pubsub_topic_name" {
+  type        = string
+  description = "gcf_accounts_upsert_pubsub_topic_name"
+}
+
 variable "gcf_beds_stats_name" {
   type        = string
   description = "gcf_beds_stats_name"
