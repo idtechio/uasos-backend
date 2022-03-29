@@ -1,0 +1,24 @@
+sendgrid:
+      HostGetsMatch: "d-b5aa1cbf3f1b4fa5978daa33fc96dda6"
+      GuestGetsMatch: "d-fc675a4d49384ea297223df70dfbc872"
+sms:
+      offering_notification: "We have a contact for you! Check your email and confirm."
+shelter_type:
+      bed: "Ágy közös szobában"
+      room: "Szoba közös használatú lakásban/házban"
+      flat: "Lakás kizárólagos használatra"
+      house: "Ház kizárólagos használatra"
+      public_shared_space: "Közös helyiség (pl. tanterem)"
+group_relation:
+      single_man: "Egyedülálló"
+      single_woman: "Egyedülálló"
+      spouses: "Házaspár/Pár"
+      mother_with_children: "Anya gyermekekkel"
+      family_with_children: "Család gyermekekkel"
+      unrelated_group: "Nem rokonokból álló csoport"
+nationality:
+      ukrainian: "Ukrán"
+      non-ukrainian: "Nem ukránok"
+complication:
+      affirmative: "Igen"
+      negative: "Nem"
