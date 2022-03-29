@@ -1,0 +1,24 @@
+sendgrid:
+      HostGetsMatch: "d-3ca6f12b406b4858a6f6c1e6d2b134ee"
+      GuestGetsMatch: "d-fc675a4d49384ea297223df70dfbc872"
+sms:
+      offering_notification: "We have a contact for you! Check your email and confirm."
+shelter_type:
+      bed: "Bed in a shared room"
+      room: "Room in a shared flat/house"
+      flat: "Flat for exclusive use"
+      house: "House for exclusive use"
+      public_shared_space: "Collective room (e.g. school room)"
+group_relation:
+      single_man: "Single Man"
+      single_woman: "Single Woman"
+      spouses: "Spouses/Couple"
+      mother_with_children: "Mother with children"
+      family_with_children: "Family with children"
+      unrelated_group: "Unrelated group"
+nationality:
+      ukrainian: "Ukrainian"
+      non-ukrainian: "Non-Ukrainian"
+complication:
+      affirmative: "Yes"
+      negative: "No"

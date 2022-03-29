@@ -12,12 +12,17 @@ from sqlalchemy import MetaData
 from sqlalchemy import Column
 from sqlalchemy import or_
 from sqlalchemy.dialects.postgresql import *
+from sqlalchemy import join
+from sqlalchemy import select
+
+import i18n
 
 from google.cloud import pubsub_v1
 from google.cloud import secretmanager
 from dotenv import load_dotenv
 
 
+# region configuration context
 def query_configuration_context(secret_id):
     client = secretmanager.SecretManagerServiceClient()
     secret_name = (
@@ -38,8 +43,10 @@ if not running_locally:
 else:
     print(f"Running locally")
     load_dotenv()
+# endregion
 
 
+# region Database connectivity initialisation
 def create_db_engine():
     db_config = {
         "drivername": "postgresql+pg8000",
@@ -70,86 +77,27 @@ def create_db_engine():
 
 
 db = create_db_engine()
+# endregion
+
+
+# region i18n initialisation
+TRANSLATIONS_FILE_PATH = './translations'
+
+i18n.set('fallback', 'en')
+i18n.set('filename_format', '{locale}.{format}')
+i18n.set('skip_locale_root_data', True)
+i18n.load_path.append(TRANSLATIONS_FILE_PATH)
+
+print(f'i18n initialised - configuration={i18n.load_path}, translations={TRANSLATIONS_FILE_PATH}')
+# endregion
 
 
 # region Database data models
-def create_matches_table_mapping():
-    table_name = os.environ["MATCHES_TABLE_NAME"]
-    # table_name = 'matches'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_matches_id", VARCHAR),
-        Column("fnc_ts_matched", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("fnc_hosts_id", VARCHAR),
-        Column("fnc_guests_id", VARCHAR),
-        Column("fnc_host_status", VARCHAR),
-        Column("fnc_guest_status", VARCHAR),
-    )
+def create_table_mapping(db_pool, db_table_name):
+    meta = MetaData(db_pool)
+    tbl = Table(db_table_name, meta, autoload=True, autoload_with=db_pool)
 
     return tbl
-
-
-def create_guests_table_mapping():
-    table_name = os.environ["GUESTS_TABLE_NAME"]
-    # table_name = 'guests'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_guests_id", VARCHAR),
-        Column("name", VARCHAR),
-        Column("city", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("listing_country", VARCHAR),
-        Column("acceptable_shelter_types", VARCHAR),
-        Column("beds", VARCHAR),
-        Column("group_relation", VARCHAR),
-        Column("is_pregnant", VARCHAR),
-        Column("is_with_disability", VARCHAR),
-        Column("is_with_animal", VARCHAR),
-        Column("is_with_elderly", VARCHAR),
-        Column("is_ukrainian_nationality", VARCHAR),
-        Column("duration_category", VARCHAR),
-        Column("email", VARCHAR),
-        Column("phone_num", VARCHAR),
-    )
-
-    return tbl
-
-
-def create_hosts_table_mapping():
-    table_name = os.environ["HOSTS_TABLE_NAME"]
-    # table_name = 'hosts'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_hosts_id", VARCHAR),
-        Column("name", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("fnc_ts_registered", VARCHAR),
-        Column("city", VARCHAR),
-        Column("listing_country", VARCHAR),
-        Column("shelter_type", VARCHAR),
-        Column("beds", VARCHAR),
-        Column("acceptable_group_relations", VARCHAR),
-        Column("ok_for_pregnant", VARCHAR),
-        Column("ok_for_disabilities", VARCHAR),
-        Column("ok_for_animals", VARCHAR),
-        Column("ok_for_elderly", VARCHAR),
-        Column("ok_for_any_nationality", VARCHAR),
-        Column("duration_category", VARCHAR),
-        Column("email", VARCHAR),
-        Column("phone_num", VARCHAR),
-        Column("transport_included", VARCHAR),
-    )
-
-    return tbl
-
-
 # endregion
 
 
@@ -179,29 +127,6 @@ class MatchAcceptanceDecision(Enum):
 class MatchAcceptanceSide(Enum):
     GUEST = "guest"
     HOST = "host"
-
-
-class Language(Enum):
-    PL = "pl"
-    UA = "us"
-
-
-# endregion
-
-
-# region Database mutation functions
-def change_match_status(db_connection, db_matches_id, target_status):
-    tbl = create_matches_table_mapping()
-
-    upd = (
-        tbl.update()
-        .where(tbl.c.db_matches_id == db_matches_id)
-        .values(fnc_status=target_status)
-    )
-
-    db_connection.execute(upd)
-
-
 # endregion
 
 
@@ -238,12 +163,11 @@ def fnc_publish_sms(message):
         return (e, 500)
 
 
-def create_sms_payload(phone_num, language):
+def create_sms_payload(phone_num, body):
     return {
-        "language": language,
         "phone_num": phone_num,
+        "body": body
     }
-
 
 # endregion
 
@@ -270,12 +194,15 @@ def query_acceptance_url(matches_id, accept_value, side):
 
 
 def create_paylod_for_guest_and_host_match_confirm_template(
-    matches_id, guest_row, host_row, to_emails
+    matches_id, guest_row, host_row, to_emails, preferred_lang
 ):
+
     print(
-        "preparing payload with context for 'GuestAndHostMatchConfirm' SendGrid template"
+        f"preparing payload with context for 'GuestAndHostMatchConfirm' SendGrid template, preferred_lang={preferred_lang}"
     )
-    template_id = "d-4b189c34ff584451a1dc1f83421a7d21"
+
+    # template_id = "d-4b189c34ff584451a1dc1f83421a7d21"
+    template_id = i18n.t("sendgrid.GUESTANDHOSTMATCHCONFIRM", locale=preferred_lang)
 
     context = {
         "host_name": host_row["name"],
@@ -300,15 +227,15 @@ publisher = pubsub_v1.PublisherClient()
 def fnc_target(event, context):
     create_offering_notifications()
 
-
 # endregion
 
 
 # region Main function
 def create_offering_notifications():
-    tbl_matches = create_matches_table_mapping()
-    tbl_guests = create_guests_table_mapping()
-    tbl_hosts = create_hosts_table_mapping()
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
+    tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
+    tbl_hosts = create_table_mapping(db_pool=db, db_table_name=os.environ["HOSTS_TABLE_NAME"])
+    tbl_accounts = create_table_mapping(db_pool=db, db_table_name=os.environ["ACCOUNTS_TABLE_NAME"])
 
     sel_matches = (
         tbl_matches.select()
@@ -322,49 +249,55 @@ def create_offering_notifications():
             result = conn.execute(sel_matches)
 
             for match in result:
-                sel_guests = tbl_guests.select().where(
+                guests_join_accounts = join(tbl_guests, tbl_accounts, tbl_guests.c.fnc_accounts_id == tbl_accounts.c.db_accounts_id)
+                sel_guests = select(tbl_guests, tbl_accounts).select_from(guests_join_accounts).where(
                     tbl_guests.c.db_guests_id == match["fnc_guests_id"]
                 )
-
                 guest_rows = conn.execute(sel_guests)
 
-                sel_hosts = tbl_hosts.select().where(
-                    tbl_hosts.c.db_hosts_id == match["fnc_hosts_id"]
+                hosts_join_accounts = join(tbl_hosts, tbl_accounts, tbl_hosts.c.fnc_accounts_id == tbl_accounts.c.db_accounts_id)
+                sel_hosts = select(tbl_hosts, tbl_accounts).select_from(hosts_join_accounts).where(
+                    tbl_guests.c.db_guests_id == match["fnc_hosts_id"]
                 )
-
                 host_rows = conn.execute(sel_hosts)
 
                 for host_row in host_rows:
                     for guest_row in guest_rows:
                         message_for_host = (
                             create_paylod_for_guest_and_host_match_confirm_template(
-                                match["db_matches_id"],
-                                guest_row,
-                                host_row,
-                                create_to_email_element(
+                                matches_id=match["db_matches_id"],
+                                guest_row=guest_row,
+                                host_row=host_row,
+                                to_emails=create_to_email_element(
                                     host_row["name"], host_row["email"]
                                 ),
+                                preferred_lang=host_row['preferred_lang']
                             )
                         )
                         message_for_guest = (
                             create_paylod_for_guest_and_host_match_confirm_template(
-                                match["db_matches_id"],
-                                guest_row,
-                                host_row,
-                                create_to_email_element(
+                                matches_id=match["db_matches_id"],
+                                guest_row=guest_row,
+                                host_row=host_row,
+                                to_emails=create_to_email_element(
                                     guest_row["name"], guest_row["email"]
                                 ),
+                                preferred_lang=guest_row['preferred_lang']
                             )
                         )
                         print(message_for_host)
                         print(message_for_guest)
                         fnc_publish_message(message_for_host)
                         fnc_publish_sms(
-                            create_sms_payload(host_row["phone_num"], Language.PL.value)
+                            create_sms_payload(phone_num=host_row["phone_num"],
+                                               body=i18n.t("sms.sealed_notification", locale=host_row['preferred_lang'])
+                                               )
                         )
                         fnc_publish_message(message_for_guest)
                         fnc_publish_sms(
-                            create_sms_payload(guest_row["phone_num"], Language.UA.value)
+                            create_sms_payload(phone_num=guest_row["phone_num"],
+                                               body=i18n.t("sms.sealed_notification", locale=guest_row['preferred_lang'])
+                                               )
                         )
 
                 upd_matches_status = (

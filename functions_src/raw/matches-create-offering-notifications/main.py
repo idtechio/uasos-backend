@@ -14,12 +14,17 @@ from sqlalchemy import MetaData
 from sqlalchemy import Column
 from sqlalchemy import or_
 from sqlalchemy.dialects.postgresql import *
+from sqlalchemy import join
+from sqlalchemy import select
+
+import i18n
 
 from google.cloud import pubsub_v1
 from google.cloud import secretmanager
 from dotenv import load_dotenv
 
 
+# region configuration context
 def query_configuration_context(secret_id):
     client = secretmanager.SecretManagerServiceClient()
     secret_name = (
@@ -40,8 +45,10 @@ if not running_locally:
 else:
     print(f"Running locally")
     load_dotenv()
+# endregion
 
 
+# region Database connectivity initialisation
 def create_db_engine():
     db_config = {
         "drivername": "postgresql+pg8000",
@@ -72,86 +79,27 @@ def create_db_engine():
 
 
 db = create_db_engine()
+# endregion
+
+
+# region i18n initialisation
+TRANSLATIONS_FILE_PATH = './translations'
+
+i18n.set('fallback', 'en')
+i18n.set('filename_format', '{locale}.{format}')
+i18n.set('skip_locale_root_data', True)
+i18n.load_path.append(TRANSLATIONS_FILE_PATH)
+
+print(f'i18n initialised - configuration={i18n.load_path}, translations={TRANSLATIONS_FILE_PATH}')
+# endregion
 
 
 # region Database data models
-def create_matches_table_mapping():
-    table_name = os.environ["MATCHES_TABLE_NAME"]
-    # table_name = 'matches'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_matches_id", VARCHAR),
-        Column("fnc_ts_matched", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("fnc_hosts_id", VARCHAR),
-        Column("fnc_guests_id", VARCHAR),
-        Column("fnc_host_status", VARCHAR),
-        Column("fnc_guest_status", VARCHAR),
-    )
+def create_table_mapping(db_pool, db_table_name):
+    meta = MetaData(db_pool)
+    tbl = Table(db_table_name, meta, autoload=True, autoload_with=db_pool)
 
     return tbl
-
-
-def create_guests_table_mapping():
-    table_name = os.environ["GUESTS_TABLE_NAME"]
-    # table_name = 'guests'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_guests_id", VARCHAR),
-        Column("name", VARCHAR),
-        Column("city", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("listing_country", VARCHAR),
-        Column("acceptable_shelter_types", VARCHAR),
-        Column("beds", VARCHAR),
-        Column("group_relation", VARCHAR),
-        Column("is_pregnant", VARCHAR),
-        Column("is_with_disability", VARCHAR),
-        Column("is_with_animal", VARCHAR),
-        Column("is_with_elderly", VARCHAR),
-        Column("is_ukrainian_nationality", VARCHAR),
-        Column("duration_category", VARCHAR),
-        Column("email", VARCHAR),
-        Column("phone_num", VARCHAR),
-    )
-
-    return tbl
-
-
-def create_hosts_table_mapping():
-    table_name = os.environ["HOSTS_TABLE_NAME"]
-    # table_name = 'hosts'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_hosts_id", VARCHAR),
-        Column("name", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("fnc_ts_registered", VARCHAR),
-        Column("city", VARCHAR),
-        Column("listing_country", VARCHAR),
-        Column("shelter_type", VARCHAR),
-        Column("beds", VARCHAR),
-        Column("acceptable_group_relations", VARCHAR),
-        Column("ok_for_pregnant", VARCHAR),
-        Column("ok_for_disabilities", VARCHAR),
-        Column("ok_for_animals", VARCHAR),
-        Column("ok_for_elderly", VARCHAR),
-        Column("ok_for_any_nationality", VARCHAR),
-        Column("duration_category", VARCHAR),
-        Column("email", VARCHAR),
-        Column("phone_num", VARCHAR),
-        Column("transport_included", VARCHAR),
-    )
-
-    return tbl
-
-
 # endregion
 
 
@@ -181,33 +129,24 @@ class MatchAcceptanceDecision(Enum):
 class MatchAcceptanceSide(Enum):
     GUEST = "guest"
     HOST = "host"
-
-
-class Language(Enum):
-    PL = "pl"
-    UA = "us"
-
-
 # endregion
 
 
 # region Database mutation functions
 def change_match_status(db_connection, db_matches_id, target_status):
-    tbl = create_matches_table_mapping()
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
 
     upd = (
-        tbl.update()
-        .where(tbl.c.db_matches_id == db_matches_id)
+        tbl_matches.update()
+        .where(tbl_matches.c.db_matches_id == db_matches_id)
         .values(fnc_status=target_status)
     )
 
     db_connection.execute(upd)
-
-
 # endregion
 
 
-# region integration utilities
+# region integration functions
 def fnc_publish_message(message):
     topic_name = os.environ["SEND_EMAIL_TOPIC"]
     topic_path = publisher.topic_path(os.environ["PROJECT_ID"], topic_name)
@@ -257,10 +196,10 @@ def create_email_payload(template_id, context, to_emails):
     }
 
 
-def create_sms_payload(phone_num, language):
+def create_sms_payload(phone_num, body):
     return {
-        "language": language,
         "phone_num": phone_num,
+        "body": body
     }
 
 
@@ -278,22 +217,24 @@ def query_listing_delete_url(listing_email, listing_id, side):
     )
 
 
-def create_paylod_for_guest_get_match_template(matches_id, host_row, guest_row):
+def create_payload_for_guest_get_match_template(matches_id, host_row, guest_row):
     print("preparing payload with context for 'GuestGetMatch' SendGrid template")
     # template_id = "d-d1db97e9b1e34a15ac13bc253f26c049" # without url_listing_delete FIXME clean up
-    template_id = "d-fc675a4d49384ea297223df70dfbc872" # with url_listing_delete
+    # template_id = "d-fc675a4d49384ea297223df70dfbc872" # with url_listing_delete
+    preferred_lang = guest_row['preferred_lang']
+    template_id = i18n.t("sendgrid.GuestGetsMatch", locale=preferred_lang)
 
     context = {
         "host_name": host_row["name"],
         "host_city": host_row["city"],
-        "host_acctype": translate_shelter_type(host_row["shelter_type"]),
-        "host_stay_length": translate_duration_category(host_row["duration_category"]),
-        "host_type": translate_shelter_type(host_row["shelter_type"]),
-        "transport": translate_complication(host_row["transport_included"]),
-        "adv_preg_allowed": translate_complication(host_row["ok_for_pregnant"]),
-        "elderly_allowed": translate_complication(host_row["ok_for_elderly"]),
-        "handicapped_allowed": translate_complication(host_row["ok_for_disabilities"]),
-        "pet_allowed": translate_complication(host_row["ok_for_animals"]),
+        "host_acctype": translate_shelter_type(host_row["shelter_type"], preferred_lang),
+        "host_stay_length": translate_duration_category(host_row["duration_category"], preferred_lang),
+        "host_type": translate_shelter_type(host_row["shelter_type"], preferred_lang),
+        "transport": translate_complication(host_row["transport_included"], preferred_lang),
+        "adv_preg_allowed": translate_complication(host_row["ok_for_pregnant"], preferred_lang),
+        "elderly_allowed": translate_complication(host_row["ok_for_elderly"], preferred_lang),
+        "handicapped_allowed": translate_complication(host_row["ok_for_disabilities"], preferred_lang),
+        "pet_allowed": translate_complication(host_row["ok_for_animals"], preferred_lang),
         "url_accept": query_acceptance_url(
             matches_id, MatchAcceptanceDecision.ACCEPTED, MatchAcceptanceSide.GUEST
         ),
@@ -312,23 +253,26 @@ def create_paylod_for_guest_get_match_template(matches_id, host_row, guest_row):
     )
 
 
-def create_paylod_for_host_get_match_template(matches_id, guest_row, host_row):
+def create_payload_for_host_get_match_template(matches_id, guest_row, host_row):
     print("preparing payload with context for 'HostGetMatch' SendGrid template")
     # template_id = "d-0752c2653cec4c3cbc69820605221878" # without url_listing_delete FIXME clean up
-    template_id = "d-d6e35cda42e343089dd03d2b03b84ffe" # with url_listing_delete
+    # template_id = "d-d6e35cda42e343089dd03d2b03b84ffe"  # with url_listing_delete
+
+    preferred_lang = host_row['preferred_lang']
+    template_id = i18n.t("sendgrid.HostGetsMatch", locale=preferred_lang)
 
     context = {
         "guest_name": guest_row["name"],
         "guest_qty": guest_row["beds"],
         # "guest_acctype" : guest_row['acceptable_shelter_types'],
-        "guest_grouptype": translate_group_relation(guest_row["group_relation"]),
+        "guest_grouptype": translate_group_relation(guest_row["group_relation"], preferred_lang),
         "guest_nationality": translate_nationality(
-            guest_row["is_ukrainian_nationality"]
+            guest_row["is_ukrainian_nationality"], preferred_lang
         ),
-        "guest_adv_preg": translate_complication(guest_row["is_pregnant"]),
-        "guest_handicapped": translate_complication(guest_row["is_with_disability"]),
-        "guest_elderly": translate_complication(guest_row["is_with_elderly"]),
-        "guest_pets": translate_complication(guest_row["is_with_animal"]),
+        "guest_adv_preg": translate_complication(guest_row["is_pregnant"], preferred_lang),
+        "guest_handicapped": translate_complication(guest_row["is_with_disability"], preferred_lang),
+        "guest_elderly": translate_complication(guest_row["is_with_elderly"], preferred_lang),
+        "guest_pets": translate_complication(guest_row["is_with_animal"], preferred_lang),
         "url_accept": query_acceptance_url(
             matches_id, MatchAcceptanceDecision.ACCEPTED, MatchAcceptanceSide.HOST
         ),
@@ -360,49 +304,53 @@ def fnc_target(event, context):
 # region Email dynamic content preparation
 
 # SHELTER_TYPES = ["bed", "room", "flat", "house", "public_shared_space"]
-def translate_shelter_type(shelter_type):
+def translate_shelter_type(shelter_type, preferred_lang):
     shelter_type = shelter_type[1:-1]
     if shelter_type == "bed":
-        return "Ліжко в загальній кімнаті/ Bed in a shared room/ Łóżko we współdzielonym pokoju"
+        return i18n.t("shelter_type.bed", locale=preferred_lang)
     elif shelter_type == "room":
-        return "Кімната в загальній квартирі/будинку/ Room in a shared flat/house / Pokój we współdzielonym mieszkaniu/domu"
+        return i18n.t("shelter_type.room", locale=preferred_lang)
     elif shelter_type == "flat":
-        return "Квартира / Flat for exclusive use / Mieszkanie na wyłączność"
+        return i18n.t("shelter_type.flat", locale=preferred_lang)
     elif shelter_type == "house":
-        return "Дім / House for exclusive use / Dom na wyłączność"
+        return i18n.t("shelter_type.house", locale=preferred_lang)
     elif shelter_type == "public_shared_space":
-        return "Колективна кімната (наприклад, шкільна кімната) / Collective room (e.g. school room) / Pokój zbiorowy (np. szkolna sala)"
+        return i18n.t("shelter_type.public_shared_space", locale=preferred_lang)
     else:
         return ""
 
 
 # GROUP_RELATIONS = ["single_man", "single_woman", "spouses", "mother_with_children", "family_with_children", "unrelated_group"]
-def translate_group_relation(group_relation):
+def translate_group_relation(group_relation, preferred_lang):
     group_relation = group_relation[1:-1]
     if group_relation == "single_man":
-        return "Неодружений/Single/Singiel"
+        return i18n.t("group_relation.single_man", locale=preferred_lang)
     elif group_relation == "single_woman":
-        return "Неодружена/Single/Singielka"
+        return i18n.t("group_relation.single_woman", locale=preferred_lang)
     elif group_relation == "spouses":
-        return "Подружжі/Spouses/Małżonkowie"
+        return i18n.t("group_relation.spouses", locale=preferred_lang)
     elif group_relation == "mother_with_children":
-        return "Мама з дітьми/Mother with children/Matka z dziećmi"
+        return i18n.t("group_relation.mother_with_children", locale=preferred_lang)
     elif group_relation == "family_with_children":
-        return "Сімя з дітьми/Family with children/Rodzina z dziećmi"
+        return i18n.t("group_relation.family_with_children", locale=preferred_lang)
     elif group_relation == "unrelated_group":
-        return "Неспоріднена група/Unrelated group/Niepowiązana grupa"
+        return i18n.t("group_relation.unrelated_group", locale=preferred_lang)
 
 
-def translate_nationality(is_ukrainian_nationality):
+def translate_nationality(is_ukrainian_nationality, preferred_lang):
     return (
-        "українська/Ukrainian/Ukraińska"
+        i18n.t("nationality.ukrainian", locale=preferred_lang)
         if is_ukrainian_nationality == "TRUE"
-        else "Інший ніж український/Non-Ukrainian/Inna niż Ukraińska"
+        else i18n.t("nationality.non-ukrainian", locale=preferred_lang)
     )
 
 
-def translate_complication(complication_flag):
-    return "Так/Yes/Tak" if complication_flag == "TRUE" else "ні/No/Nie"
+def translate_complication(complication_flag, preferred_lang):
+    return (
+        i18n.t("complication.affirmative", locale=preferred_lang)
+        if complication_flag == "TRUE"
+        else i18n.t("complication.negative", locale=preferred_lang)
+    )
 
 
 # DURATION_CATEGORIES = ["less_than_1_week", "1_week", "2_3_weeks", "month", "longer"]
@@ -425,9 +373,10 @@ def translate_duration_category(duration):
 
 # region Main function
 def create_offering_notifications():
-    tbl_matches = create_matches_table_mapping()
-    tbl_guests = create_guests_table_mapping()
-    tbl_hosts = create_hosts_table_mapping()
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
+    tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
+    tbl_hosts = create_table_mapping(db_pool=db, db_table_name=os.environ["HOSTS_TABLE_NAME"])
+    tbl_accounts = create_table_mapping(db_pool=db, db_table_name=os.environ["ACCOUNTS_TABLE_NAME"])
 
     sel_matches = tbl_matches.select().where(
         tbl_matches.c.fnc_status == MatchesStatus.DEFAULT
@@ -438,13 +387,15 @@ def create_offering_notifications():
             result = conn.execute(sel_matches)
 
             for match in result:
-                sel_guests = tbl_guests.select().where(
+                guests_join_accounts = join(tbl_guests, tbl_accounts, tbl_guests.c.fnc_accounts_id == tbl_accounts.c.db_accounts_id)
+                sel_guests = select(tbl_guests, tbl_accounts).select_from(guests_join_accounts).where(
                     tbl_guests.c.db_guests_id == match["fnc_guests_id"]
                 )
                 guest_rows = conn.execute(sel_guests)
 
-                sel_hosts = tbl_hosts.select().where(
-                    tbl_hosts.c.db_hosts_id == match["fnc_hosts_id"]
+                hosts_join_accounts = join(tbl_hosts, tbl_accounts, tbl_hosts.c.fnc_accounts_id == tbl_accounts.c.db_accounts_id)
+                sel_hosts = select(tbl_hosts, tbl_accounts).select_from(hosts_join_accounts).where(
+                    tbl_guests.c.db_guests_id == match["fnc_hosts_id"]
                 )
                 host_rows = conn.execute(sel_hosts)
 
@@ -452,26 +403,24 @@ def create_offering_notifications():
                     for guest_row in guest_rows:
                         if match["fnc_host_status"] == MatchesStatus.DEFAULT.value:
                             message_for_host = (
-                                create_paylod_for_host_get_match_template(
-                                    match["db_matches_id"], guest_row, host_row
-                                )
+                                create_payload_for_host_get_match_template(match["db_matches_id"], guest_row, host_row)
                             )
                             print(message_for_host)
                             fnc_publish_message(message_for_host)
                             fnc_publish_sms(
-                                create_sms_payload(host_row["phone_num"], Language.PL.value)
+                                create_sms_payload(host_row["phone_num"], i18n.t("sms.offering_notification", locale=host_row['preferred_lang']))
                             )
 
                         if match["fnc_guest_status"] == MatchesStatus.DEFAULT.value:
                             message_for_guest = (
-                                create_paylod_for_guest_get_match_template(
+                                create_payload_for_guest_get_match_template(
                                     match["db_matches_id"], host_row, guest_row
                                 )
                             )
                             print(message_for_guest)
                             fnc_publish_message(message_for_guest)
                             fnc_publish_sms(
-                                create_sms_payload(guest_row["phone_num"], Language.UA.value)
+                                create_sms_payload(guest_row["phone_num"], i18n.t("sms.offering_notification", locale=guest_row['preferred_lang']))
                             )
 
                 upd_matches_status = (
