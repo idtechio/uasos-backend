@@ -12,7 +12,7 @@ terraform {
   }
 
   backend "gcs" {
-    bucket = "tf-state-ukrn-hlpr-test"
+    bucket = "tf-state-ukrn-hlpr-dev"
   }
 }
 
