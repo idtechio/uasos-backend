@@ -226,3 +226,13 @@ variable "gcf_listing-delete_pubsub_topic_name" {
   type        = string
   description = "gcf_listing-delete_pubsub_topic_name"
 }
+
+variable "gcf_refresh_beds_stats_name" {
+  description = "gcf_refresh_beds_stats_name"
+  type        = string
+}
+
+variable "gcf_refresh_beds_stats_pubsub_topic_name" {
+  type        = string
+  description = "gcf_refresh_beds_stats_pubsub_topic_name"
+}
