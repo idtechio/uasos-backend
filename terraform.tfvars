@@ -72,4 +72,4 @@ gcf_listing-delete_pubsub_topic_name = "listing-delete"
 gcf_refresh_beds_stats_name = "refresh_beds_stats"
 gcf_refresh_beds_stats_pubsub_topic_name = "refresh_beds_stats"
 
-gcf_beds_stats_name = "beds_stats"
+gcf_beds_stats_name = "beds-stats"

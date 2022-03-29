@@ -39,6 +39,11 @@ variable "fnc_service_account" {
   description = "#todo"
 }
 
+variable "environment_variables" {
+  type        = map
+  description = "#todo"
+}
+
 variable "fnc_has_custom_iam" {
   type        = bool
   description = "#todo"
