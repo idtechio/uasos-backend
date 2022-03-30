@@ -126,6 +126,8 @@ def postgres_update(db_pool, pubsub_msg):
     if not pubsub_msg['db_accounts_id']:
         raise ValueError(f'key value "db_accounts_id" is missing for UPDATE in "{pubsub_msg}"')
 
+    pubsub_msg['preferred_lang'] = lowercase_stripped(pubsub_msg['preferred_lang'])
+    pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
     payload = nvl(pubsub_msg)
 
     with db.connect() as conn:
