@@ -111,24 +111,23 @@ def fnc_target(event, context):
         pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
     else:
         pubsub_msg = json.loads(event["data"])
-    postgres_insert(db, pubsub_msg)
+    postgres_update(db, pubsub_msg)
 # endregion
 
 
 # region data mutation services
-def postgres_insert(db_pool, pubsub_msg):
+def postgres_update(db_pool, pubsub_msg):
     table_name = os.environ["GUESTS_TABLE_NAME"]
     tbl_guests = create_table_mapping(db_pool=db_pool, table_name=table_name)
 
-    if pubsub_msg['db_guests_id']:
-        raise ValueError(f'Key value "db_guests_id" cannot have value for INSERT in "{pubsub_msg}"')
+    if not pubsub_msg['db_guests_id']:
+        raise ValueError(f'key value "db_guests_id" is missing for UPDATE in "{pubsub_msg}"')
 
     pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
-    pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED
 
     payload = nvl(pubsub_msg)
 
-    stmt = tbl_guests.insert()
+    stmt = tbl_guests.update()
 
     with db.connect() as conn:
         with conn.begin():
