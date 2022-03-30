@@ -1,6 +1,6 @@
 DROP VIEW IF EXISTS offers;
 
-CREATE VIEW IF NOT EXISTS offers AS
+CREATE OR REPLACE VIEW offers AS
 SELECT
     a.uid AS account_uid
 

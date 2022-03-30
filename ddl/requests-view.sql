@@ -1,6 +1,6 @@
 DROP VIEW IF EXISTS requests;
 
-CREATE VIEW IF NOT EXISTS requests AS
+CREATE OR REPLACE VIEW requests AS
 SELECT
     a.uid AS account_uid
 
@@ -20,7 +20,6 @@ SELECT
     ,g.beds
     ,g.acceptable_shelter_types
     ,g.group_relation
-    ,g.duration_category
     ,g.is_pregnant
     ,g.is_with_disability
     ,g.is_with_animal

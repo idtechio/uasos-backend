@@ -1,6 +1,6 @@
 DROP VIEW IF EXISTS accounts_info;
 
-CREATE VIEW IF NOT EXISTS accounts_info AS
+CREATE OR REPLACE VIEW accounts_info AS
 SELECT
     uid
     ,name
