@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import *
 
 from google.cloud import secretmanager
 
-
+# region configuration context
 def query_configuration_context(secret_id):
     client = secretmanager.SecretManagerServiceClient()
     secret_name = (
@@ -32,8 +32,10 @@ else:
 
     print(f"Running locally")
     load_dotenv()
+# endregion
 
 
+# region database connectivity
 def create_db_engine():
     db_config = {
         "drivername": "postgresql+pg8000",
@@ -64,8 +66,16 @@ def create_db_engine():
 
 
 db = create_db_engine()
+# endregion
 
 
+# region utility functions
+def nvl(dct):
+    return {k: sqlalchemy.null() if not v else v for k, v in dct.items()}
+# endregion
+
+
+# region Enum definitions
 class HostsGuestsStatus(Enum):
     MOD_REJECTED = "045"
     DEFAULT = "055"
@@ -73,85 +83,45 @@ class HostsGuestsStatus(Enum):
     FNC_BEING_PROCESSED = "075"
     FNC_MATCHED = "085"
     MATCH_ACCEPTED = "095"
+# endregion
 
 
+# region Database data models
+def create_table_mapping(db_pool, table_name):
+    meta = MetaData(db_pool)
+    tbl = Table(table_name, meta, autoload=True, autoload_with=db_pool)
+
+    return tbl
+# endregion
+
+
+# region integration utilities
 def fnc_target(event, context):
     if not running_locally:
         pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
     else:
         pubsub_msg = json.loads(event["data"])
     postgres_insert(db, pubsub_msg)
+# endregion
 
 
-def create_guests_table_mapping():
-    table_name = os.environ["GUESTS_TABLE_NAME"]
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("fnc_ts_registered", VARCHAR(13)),
-        Column("fnc_status", VARCHAR),
-        Column("fnc_score", INTEGER),
-        Column("name", VARCHAR),
-        Column("country", VARCHAR),  # FIXME: misleading field name
-        Column("phone_num", VARCHAR),
-        Column("email", VARCHAR),
-        Column("city", VARCHAR),
-        Column("is_children", VARCHAR),
-        Column("is_pet", VARCHAR),
-        Column("is_handicapped", VARCHAR),
-        Column("num_people", INTEGER),
-        Column("period", INTEGER),
-        Column("listing_country", VARCHAR),
-        Column("acceptable_shelter_types", VARCHAR),
-        Column("beds", INTEGER),
-        Column("group_relation", VARCHAR),
-        Column("is_pregnant", VARCHAR),
-        Column("is_with_disability", VARCHAR),
-        Column("is_with_animal", VARCHAR),
-        Column("is_with_elderly", VARCHAR),
-        Column("is_ukrainian_nationality", VARCHAR),
-        Column("duration_category", VARCHAR),
-    )
-
-    return tbl
-
-
+# region data mutation services
 def postgres_insert(db, pubsub_msg):
-    tbl = create_guests_table_mapping()
+    table_name = os.environ["GUESTS_TABLE_NAME"]
+    tbl_guests = create_table_mapping(db_pool=db, table_name=table_name)
 
-    VALUE_NOT_PROVIDED = sqlalchemy.null()
+    country = pubsub_msg.get("country")  # FIXME: misleading field name
+    pubsub_msg['country'] = country  # FIXME: misleading field name
+    pubsub_msg['listing_country'] = country  # FIXME: misleading field name
+    pubsub_msg['fnc_ts_registered'] = f"{int(time.time() * 1000)}"  # FIXME: move to SQL defaults
+    pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED  # FIXME: move to SQL defaults
+    pubsub_msg['fnc_score'] = 5  # FIXME: move to SQL defaults
 
-    country = pubsub_msg.get("country", VALUE_NOT_PROVIDED)  # FIXME: misleading field name
+    payload = nvl(pubsub_msg)
 
-    ins = tbl.insert().values(
-        fnc_ts_registered=f"{int(time.time() * 1000)}",
-        fnc_status=HostsGuestsStatus.MOD_ACCEPTED,
-        fnc_score=5,
-        name=pubsub_msg.get("name", VALUE_NOT_PROVIDED),
-        country=country,  # FIXME: misleading field name
-        phone_num=pubsub_msg.get("phone_num", VALUE_NOT_PROVIDED),
-        email=pubsub_msg.get("email", VALUE_NOT_PROVIDED),
-        city=pubsub_msg.get("city", VALUE_NOT_PROVIDED),
-        is_children=pubsub_msg.get("is_children", VALUE_NOT_PROVIDED),
-        is_pet=pubsub_msg.get("is_pet", VALUE_NOT_PROVIDED),
-        is_handicapped=pubsub_msg.get("is_handicapped", VALUE_NOT_PROVIDED),
-        num_people=pubsub_msg.get("num_people", VALUE_NOT_PROVIDED),
-        period=pubsub_msg.get("period", VALUE_NOT_PROVIDED),
-        listing_country=country,  # FIXME: misleading field name
-        acceptable_shelter_types=pubsub_msg.get(
-            "acceptable_shelter_types", VALUE_NOT_PROVIDED
-        ),
-        beds=pubsub_msg.get("beds", VALUE_NOT_PROVIDED),
-        group_relation=pubsub_msg.get("group_relation", VALUE_NOT_PROVIDED),
-        is_pregnant=pubsub_msg.get("is_pregnant", VALUE_NOT_PROVIDED),
-        is_with_disability=pubsub_msg.get("is_with_disability", VALUE_NOT_PROVIDED),
-        is_with_animal=pubsub_msg.get("is_with_animal", VALUE_NOT_PROVIDED),
-        is_with_elderly=pubsub_msg.get("is_with_elderly", VALUE_NOT_PROVIDED),
-        is_ukrainian_nationality=pubsub_msg.get(
-            "is_ukrainian_nationality", VALUE_NOT_PROVIDED
-        ),
-        duration_category=pubsub_msg.get("duration_category", VALUE_NOT_PROVIDED),
-    )
+    stmt = tbl_guests.insert()
+
     with db.connect() as conn:
-        conn.execute(ins)
+        with conn.begin():
+            conn.execute(stmt.values(**payload))
+# endregion
