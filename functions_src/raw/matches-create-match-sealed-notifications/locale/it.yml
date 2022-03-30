@@ -1,0 +1,29 @@
+staticValues:
+    'groupRelations':
+        'single_man': ''
+        'single_woman': ''
+        'spouses': ''
+        'mother_with_children': ''
+        'family_with_children': ''
+        'unrelated_group': ''
+    'accommodationTypes':
+        'bed': ''
+        'room': ''
+        'flat': ''
+        'house': ''
+        'public_shared_space': ''
+    'boolean':
+        'yes': ''
+        'no': ''
+messaging:
+    'sms':
+        'offeringNotification': 'Abbiamo un contatto per te! Controlla la tua email e conferma.'
+        'sealedNotification': 'Abbiamo un contatto per te! Controlla la tua email e conferma.'
+common:
+    'nationalities':
+        'ukrainian': Ucraino
+        'nonUkarainian': 'Non ucraino'
+sendgrid:
+    'HostGetsMatch': d-9ecd2f420eac4722a24896520fee3d33
+    'GuestGetsMatch': d-fc675a4d49384ea297223df70dfbc872
+    'GUESTANDHOSTMATCHCONFIRM': d-f5c9c95609c64b8fad6e9ea355197d8a

@@ -83,14 +83,14 @@ db = create_db_engine()
 
 
 # region i18n initialisation
-TRANSLATIONS_FILE_PATH = './translations'
+TRANSLATIONS_FILE_PATH = './locale'
 
 i18n.set('fallback', 'en')
 i18n.set('filename_format', '{locale}.{format}')
 i18n.set('skip_locale_root_data', True)
 i18n.load_path.append(TRANSLATIONS_FILE_PATH)
 
-print(f'i18n initialised - configuration={i18n.load_path}, translations={TRANSLATIONS_FILE_PATH}')
+print(f'i18n initialised - configuration={i18n.load_path}')
 # endregion
 
 
@@ -307,15 +307,15 @@ def fnc_target(event, context):
 def translate_shelter_type(shelter_type, preferred_lang):
     shelter_type = shelter_type[1:-1]
     if shelter_type == "bed":
-        return i18n.t("shelter_type.bed", locale=preferred_lang)
+        return i18n.t("staticValues.accommodationTypes..bed", locale=preferred_lang)
     elif shelter_type == "room":
-        return i18n.t("shelter_type.room", locale=preferred_lang)
+        return i18n.t("staticValues.accommodationTypes..room", locale=preferred_lang)
     elif shelter_type == "flat":
-        return i18n.t("shelter_type.flat", locale=preferred_lang)
+        return i18n.t("staticValues.accommodationTypes..flat", locale=preferred_lang)
     elif shelter_type == "house":
-        return i18n.t("shelter_type.house", locale=preferred_lang)
+        return i18n.t("staticValues.accommodationTypes..house", locale=preferred_lang)
     elif shelter_type == "public_shared_space":
-        return i18n.t("shelter_type.public_shared_space", locale=preferred_lang)
+        return i18n.t("staticValues.accommodationTypes..public_shared_space", locale=preferred_lang)
     else:
         return ""
 
@@ -328,28 +328,28 @@ def translate_group_relation(group_relation, preferred_lang):
     elif group_relation == "single_woman":
         return i18n.t("group_relation.single_woman", locale=preferred_lang)
     elif group_relation == "spouses":
-        return i18n.t("group_relation.spouses", locale=preferred_lang)
+        return i18n.t("staticValues.groupRelations.spouses", locale=preferred_lang)
     elif group_relation == "mother_with_children":
-        return i18n.t("group_relation.mother_with_children", locale=preferred_lang)
+        return i18n.t("staticValues.groupRelations.mother_with_children", locale=preferred_lang)
     elif group_relation == "family_with_children":
-        return i18n.t("group_relation.family_with_children", locale=preferred_lang)
+        return i18n.t("staticValues.groupRelations.family_with_children", locale=preferred_lang)
     elif group_relation == "unrelated_group":
-        return i18n.t("group_relation.unrelated_group", locale=preferred_lang)
+        return i18n.t("staticValues.groupRelations.unrelated_group", locale=preferred_lang)
 
 
 def translate_nationality(is_ukrainian_nationality, preferred_lang):
     return (
-        i18n.t("nationality.ukrainian", locale=preferred_lang)
+        i18n.t("common.nationalities.ukrainian", locale=preferred_lang)
         if is_ukrainian_nationality == "TRUE"
-        else i18n.t("nationality.non-ukrainian", locale=preferred_lang)
+        else i18n.t("common.nationalities.nonUkarainian", locale=preferred_lang)
     )
 
 
 def translate_complication(complication_flag, preferred_lang):
     return (
-        i18n.t("complication.affirmative", locale=preferred_lang)
+        i18n.t("staticValues.boolean.yes", locale=preferred_lang)
         if complication_flag == "TRUE"
-        else i18n.t("complication.negative", locale=preferred_lang)
+        else i18n.t("staticValues.boolean.no", locale=preferred_lang)
     )
 
 
@@ -408,7 +408,7 @@ def create_offering_notifications():
                             print(message_for_host)
                             fnc_publish_message(message_for_host)
                             fnc_publish_sms(
-                                create_sms_payload(host_row["phone_num"], i18n.t("sms.offering_notification", locale=host_row['preferred_lang']))
+                                create_sms_payload(host_row["phone_num"], i18n.t("messaging.sms.offeringNotification", locale=host_row['preferred_lang']))
                             )
 
                         if match["fnc_guest_status"] == MatchesStatus.DEFAULT.value:
@@ -420,7 +420,7 @@ def create_offering_notifications():
                             print(message_for_guest)
                             fnc_publish_message(message_for_guest)
                             fnc_publish_sms(
-                                create_sms_payload(guest_row["phone_num"], i18n.t("sms.offering_notification", locale=guest_row['preferred_lang']))
+                                create_sms_payload(guest_row["phone_num"], i18n.t("messaging.sms.offeringNotification", locale=guest_row['preferred_lang']))
                             )
 
                 upd_matches_status = (

@@ -81,14 +81,14 @@ db = create_db_engine()
 
 
 # region i18n initialisation
-TRANSLATIONS_FILE_PATH = './translations'
+TRANSLATIONS_FILE_PATH = './locale'
 
 i18n.set('fallback', 'en')
 i18n.set('filename_format', '{locale}.{format}')
 i18n.set('skip_locale_root_data', True)
 i18n.load_path.append(TRANSLATIONS_FILE_PATH)
 
-print(f'i18n initialised - configuration={i18n.load_path}, translations={TRANSLATIONS_FILE_PATH}')
+print(f'i18n initialised - configuration={i18n.load_path}')
 # endregion
 
 
@@ -290,13 +290,13 @@ def create_offering_notifications():
                         fnc_publish_message(message_for_host)
                         fnc_publish_sms(
                             create_sms_payload(phone_num=host_row["phone_num"],
-                                               body=i18n.t("sms.sealed_notification", locale=host_row['preferred_lang'])
+                                               body=i18n.t("messaging.sms.sealedNotification", locale=host_row['preferred_lang'])
                                                )
                         )
                         fnc_publish_message(message_for_guest)
                         fnc_publish_sms(
                             create_sms_payload(phone_num=guest_row["phone_num"],
-                                               body=i18n.t("sms.sealed_notification", locale=guest_row['preferred_lang'])
+                                               body=i18n.t("messaging.sms.sealedNotification", locale=guest_row['preferred_lang'])
                                                )
                         )
 
