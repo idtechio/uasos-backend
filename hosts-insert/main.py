@@ -73,6 +73,16 @@ db = create_db_engine()
 # region utility functions
 def nvl(dct):
     return {k: sqlalchemy.null() if not v else v for k, v in dct.items()}
+
+
+def lowercase_stripped(value):
+    result = value
+
+    if result:
+        result = result.strip()
+        result = result.lower()
+
+    return result
 # endregion
 
 
@@ -107,17 +117,13 @@ class HostsGuestsStatus(Enum):
 
 
 # region data mutation services
-def postgres_insert(db, pubsub_msg):
+def postgres_insert(db_pool, pubsub_msg):
     table_name = os.environ["HOSTS_TABLE_NAME"]
-    tbl_hosts = create_table_mapping(db_pool=db, table_name=table_name)
+    tbl_hosts = create_table_mapping(db_pool=db_pool, table_name=table_name)
 
-    country = pubsub_msg.get("country")  # FIXME: misleading field name
-    pubsub_msg['country'] = country  # FIXME: misleading field name
-    pubsub_msg['listing_country'] = country  # FIXME: misleading field name
-    pubsub_msg['fnc_ts_registered'] = f"{int(time.time() * 1000)}"  # FIXME: move to SQL defaults
-    pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED  # FIXME: move to SQL defaults
-    pubsub_msg['fnc_score'] = 5  # FIXME: move to SQL defaults
+    pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED
 
+    pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
     payload = nvl(pubsub_msg)
 
     stmt = tbl_hosts.insert()
