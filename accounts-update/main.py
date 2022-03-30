@@ -123,6 +123,9 @@ def postgres_update(db_pool, pubsub_msg):
 
     tbl_accounts = create_table_mapping(db_pool=db_pool, db_table_name=table_name)
 
+    if not pubsub_msg['db_accounts_id']:
+        raise ValueError(f'key value "db_accounts_id" is missing for UPDATE in "{pubsub_msg}"')
+
     payload = nvl(pubsub_msg)
 
     with db.connect() as conn:
