@@ -1,0 +1,29 @@
+staticValues:
+    'groupRelations':
+        'single_man': Slobodný
+        'single_woman': Slobodná
+        'spouses': Manželia/Pár
+        'mother_with_children': 'Matka s deťmi'
+        'family_with_children': 'Rodina s deťmi'
+        'unrelated_group': 'Nepríbuzná skupina'
+    'accommodationTypes':
+        'bed': 'Posteľ v spoločnej izbe'
+        'room': 'Izba v spoločnom byte/dome'
+        'flat': 'Byt na výhradné použitie'
+        'house': 'Dom na výhradné použitie'
+        'public_shared_space': 'Spoločná miestnosť (napr. školská miestnosť)'
+    'boolean':
+        'yes': Áno
+        'no': Nie
+messaging:
+    'sms':
+        'offeringNotification': 'Máme pre vás kontakt! Skontrolujte svoj e-mail a potvrďte.'
+        'sealedNotification': 'Máme pre vás kontakt! Skontrolujte svoj email a potvrďte.'
+common:
+    'nationalities':
+        'ukrainian': Ukrajinský
+        'nonUkarainian': Neukrajinský
+sendgrid:
+    'HostGetsMatch': d-a14280582e91403aa8192be0bd66cffc
+    'GuestGetsMatch': d-fc675a4d49384ea297223df70dfbc872
+    'GUESTANDHOSTMATCHCONFIRM': d-a8d2d2c29b874208b98a298ebe96f805
