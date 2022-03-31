@@ -12,7 +12,7 @@ SELECT
         WHEN h.fnc_status='085' THEN 'matched'
         WHEN h.fnc_status='095' THEN 'match_accepted'
         ELSE 'default'
-    END AS hosts_status
+    END AS host_status
     ,h.city
     ,h.country
     ,h.phone_num
