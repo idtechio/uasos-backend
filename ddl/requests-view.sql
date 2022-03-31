@@ -3,6 +3,7 @@ DROP VIEW IF EXISTS requests;
 CREATE OR REPLACE VIEW requests AS
 SELECT
     a.uid AS account_uid
+    ,a.name AS guest_name
 
     ,g.db_guests_id AS guest_id
     ,CASE
@@ -15,8 +16,8 @@ SELECT
     END AS guest_status
     ,g.city
     ,g.country
-    ,g.phone_num
-    ,g.email
+    ,coalesce(g.phone_num, a.phone_num) AS phone_num
+    ,coalesce(g.email, a.email) AS email
     ,g.beds
     ,g.acceptable_shelter_types
     ,g.group_relation
@@ -37,10 +38,11 @@ SELECT
     END AS match_status
 
     ,h.db_hosts_id AS host_id
+    ,ah.name AS host_name
     ,h.city AS host_city
     ,h.country AS host_country
-    ,h.phone_num AS host_phone_num
-    ,h.email AS host_email
+    ,coalesce(h.phone_num, ah.phone_num) AS host_phone_num
+    ,coalesce(h.email, ah.email) AS host_email
     ,CASE
         WHEN h.fnc_status='045' THEN 'rejected'
         WHEN h.fnc_status='065' THEN 'accepted'
@@ -49,7 +51,8 @@ SELECT
         WHEN h.fnc_status='095' THEN 'match_accepted'
         ELSE 'default'
     END AS hosts_status
-FROM hosts h
-JOIN accounts a ON a.db_accounts_id = h.fnc_accounts_id
-LEFT JOIN matches m ON m.fnc_hosts_id = h.db_hosts_id
-LEFT JOIN guests g ON g.db_guests_id = m.fnc_guests_id;
+FROM guests g
+JOIN accounts a ON a.db_accounts_id = g.fnc_accounts_id
+LEFT JOIN matches m ON m.fnc_guests_id = g.db_guests_id
+LEFT JOIN hosts h ON h.db_hosts_id = m.fnc_hosts_id
+LEFT JOIN accounts ah ON ah.db_accounts_id = h.fnc_accounts_id;

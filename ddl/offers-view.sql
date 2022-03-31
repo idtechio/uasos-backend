@@ -3,6 +3,7 @@ DROP VIEW IF EXISTS offers;
 CREATE OR REPLACE VIEW offers AS
 SELECT
     a.uid AS account_uid
+    ,a.name AS host_name
 
     ,h.db_hosts_id AS host_id
     ,CASE
@@ -15,8 +16,8 @@ SELECT
     END AS host_status
     ,h.city
     ,h.country
-    ,h.phone_num
-    ,h.email
+    ,coalesce(h.phone_num, a.phone_num) AS phone_num
+    ,coalesce(h.email, a.email) AS email
     ,h.closest_city
     ,h.zipcode
     ,h.street
@@ -44,10 +45,11 @@ SELECT
     END AS match_status
 
     ,g.db_guests_id AS guest_id
+    ,ag.name AS guest_name
     ,g.city AS guest_city
     ,g.country AS guest_country
-    ,g.phone_num AS guest_phone_num
-    ,g.email AS guest_email
+    ,coalesce(g.phone_num, ag.phone_num) AS guest_phone_num
+    ,coalesce(g.email, ag.email) AS guest_email
     ,CASE
         WHEN g.fnc_status='045' THEN 'rejected'
         WHEN g.fnc_status='065' THEN 'accepted'
@@ -59,4 +61,5 @@ SELECT
 FROM hosts h
 JOIN accounts a ON a.db_accounts_id = h.fnc_accounts_id
 LEFT JOIN matches m ON m.fnc_hosts_id = h.db_hosts_id
-LEFT JOIN guests g ON g.db_guests_id = m.fnc_guests_id;
+LEFT JOIN guests g ON g.db_guests_id = m.fnc_guests_id
+LEFT JOIN accounts ag ON ag.db_accounts_id = g.fnc_accounts_id;
