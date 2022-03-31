@@ -84,6 +84,10 @@ variable "gcf_hosts_table_name" {
   type        = string
 }
 
+variable "gcf_accounts_table_name" {
+  type        = string
+}
+
 variable "gcf_memory" {
   type        = number
 }

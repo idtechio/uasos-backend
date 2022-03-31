@@ -23,6 +23,7 @@ gcf_target = "fnc_target"
 gcf_matches_table_name = "matches"
 gcf_guests_table_name = "guests"
 gcf_hosts_table_name = "hosts"
+gcf_accounts_table_name = "accounts"
 
 gcf_memory = 1024
 gcf_matches-create_memory = 4096
