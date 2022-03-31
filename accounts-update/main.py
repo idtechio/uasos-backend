@@ -4,8 +4,7 @@ import base64
 import json
 import time
 from enum import Enum
-from sqlalchemy import create_engine, Table, MetaData, Column, inspect
-from sqlalchemy.dialects.postgresql import *
+from sqlalchemy import create_engine, Table, MetaData
 
 from google.cloud import secretmanager
 
@@ -18,7 +17,7 @@ def query_configuration_context(secret_id):
     )
     response = client.access_secret_version(request={"name": secret_name})
     secret_value = response.payload.data.decode("UTF-8")
-    configuration_context = json.loads(secret_value)
+    configuration_context = json.loads(secret_value)  # FIXME: shadows the outer scope in purpose
     return configuration_context
 
 
@@ -71,6 +70,10 @@ db = create_db_engine()
 
 
 # region utility functions
+def query_epoch_with_milliseconds():
+    return int(time.time() * 1000)
+
+
 def nvl(dct):
     return {k: sqlalchemy.null() if not v else v for k, v in dct.items()}
 
@@ -86,49 +89,51 @@ def lowercase_stripped(value):
 # endregion
 
 
+# region Enum definitions
+class AccountsStatus(Enum):
+    MOD_REJECTED = "045"
+    DEFAULT = "055"
+    MOD_ACCEPTED = "065"
+# endregion
+
+
 # region integration utilities
 def fnc_target(event, context):
     if not running_locally:
         pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
     else:
         pubsub_msg = json.loads(event["data"])
-    postgres_insert(db_pool=db, pubsub_msg=pubsub_msg)
+    postgres_update(db_pool=db, pubsub_msg=pubsub_msg)
 # endregion
 
 
 # region Database data models
-def create_table_mapping(db_pool, table_name):
+def create_table_mapping(db_pool, db_table_name):
     meta = MetaData(db_pool)
-    tbl = Table(table_name, meta, autoload=True, autoload_with=db_pool)
+    tbl = Table(db_table_name, meta, autoload=True, autoload_with=db_pool)
 
     return tbl
 # endregion
 
 
-# region Enum definitions
-class HostsGuestsStatus(Enum):
-    MOD_REJECTED = "045"
-    DEFAULT = "055"
-    MOD_ACCEPTED = "065"
-    FNC_BEING_PROCESSED = "075"
-    FNC_MATCHED = "085"
-    MATCH_ACCEPTED = "095"
-# endregion
-
-
 # region data mutation services
-def postgres_insert(db_pool, pubsub_msg):
-    table_name = os.environ["HOSTS_TABLE_NAME"]
-    tbl_hosts = create_table_mapping(db_pool=db_pool, table_name=table_name)
+def postgres_update(db_pool, pubsub_msg):
+    # table_name = 'accounts'
+    table_name = os.environ["ACCOUNTS_TABLE_NAME"]
 
-    pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED
+    tbl_accounts = create_table_mapping(db_pool=db_pool, db_table_name=table_name)
 
+    if not pubsub_msg['db_accounts_id']:
+        raise ValueError(f'key value "db_accounts_id" is missing for UPDATE in "{pubsub_msg}"')
+
+    pubsub_msg['preferred_lang'] = lowercase_stripped(pubsub_msg['preferred_lang'])
     pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
     payload = nvl(pubsub_msg)
 
-    stmt = tbl_hosts.insert()
-
     with db.connect() as conn:
         with conn.begin():
+            stmt = tbl_accounts.update().where(tbl_accounts.c.db_accounts_id == pubsub_msg['db_accounts_id'])
+            print(f"prepared UPDATE statement for table={table_name} and db_accounts_id={pubsub_msg['db_accounts_id']}")
+
             conn.execute(stmt.values(**payload))
 # endregion

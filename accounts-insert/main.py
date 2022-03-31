@@ -74,11 +74,18 @@ def query_epoch_with_milliseconds():
     return int(time.time() * 1000)
 
 
-VALUE_NOT_PROVIDED = sqlalchemy.null()
-
-
 def nvl(dct):
-    return {k: VALUE_NOT_PROVIDED if not v else v for k, v in dct.items()}
+    return {k: sqlalchemy.null() if not v else v for k, v in dct.items()}
+
+
+def lowercase_stripped(value):
+    result = value
+
+    if result:
+        result = result.strip()
+        result = result.lower()
+
+    return result
 # endregion
 
 
@@ -96,7 +103,7 @@ def fnc_target(event, context):
         pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
     else:
         pubsub_msg = json.loads(event["data"])
-    postgres_upsert(db_pool=db, pubsub_msg=pubsub_msg)
+    postgres_insert(db_pool=db, pubsub_msg=pubsub_msg)
 # endregion
 
 
@@ -110,26 +117,23 @@ def create_table_mapping(db_pool, db_table_name):
 
 
 # region data mutation services
-def postgres_upsert(db_pool, pubsub_msg):
-    # table_name = table_name = os.environ["ACCOUNTS_TABLE_NAME"]
-    table_name = 'accounts'
+def postgres_insert(db_pool, pubsub_msg):
+    # table_name = 'accounts'
+    table_name = os.environ["ACCOUNTS_TABLE_NAME"]
 
     tbl_accounts = create_table_mapping(db_pool=db_pool, db_table_name=table_name)
 
-    # when payload has empty os missing 'db_accounts_id' field it is considered as INSERT clause, otherwise - UPDATE
-    if not pubsub_msg['db_accounts_id']:
-        pubsub_msg.pop('db_accounts_id', None)
+    if pubsub_msg['db_accounts_id']:
+        raise ValueError(f'Key value "db_accounts_id" cannot have value for INSERT in "{pubsub_msg}"')
 
+    pubsub_msg['preferred_lang'] = lowercase_stripped(pubsub_msg['preferred_lang'])
+    pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
     payload = nvl(pubsub_msg)
 
     with db.connect() as conn:
         with conn.begin():
-            if 'db_accounts_id' not in pubsub_msg.keys():
-                stmt = tbl_accounts.insert()
-                print(f"prepared INSERT statement for table-{table_name}")
-            else:
-                stmt = tbl_accounts.update().where(tbl_accounts.c.db_accounts_id == pubsub_msg['db_accounts_id'])
-                print(f"prepared UPDATE statement for table={table_name} and db_accounts_id={pubsub_msg['db_accounts_id']}")
+            stmt = tbl_accounts.insert()
+            print(f"prepared INSERT statement for table={table_name}")
 
             conn.execute(stmt.values(**payload))
 # endregion
