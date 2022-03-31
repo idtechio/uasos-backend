@@ -50,7 +50,17 @@ SELECT
         WHEN h.fnc_status='085' THEN 'matched'
         WHEN h.fnc_status='095' THEN 'match_accepted'
         ELSE 'default'
-    END AS hosts_status
+    END AS host_status
+    ,h.shelter_type AS host_shelter_type
+    ,h.beds AS host_beds
+    ,h.acceptable_group_relations AS host_acceptable_group_relations
+    ,h.ok_for_pregnant AS host_ok_for_pregnant
+    ,h.ok_for_disabilities AS host_ok_for_disabilities
+    ,h.ok_for_animals AS host_ok_for_animals
+    ,h.ok_for_elderly AS host_ok_for_elderly
+    ,h.ok_for_any_nationality AS host_ok_for_any_nationality
+    ,h.duration_category AS host_duration_category
+    ,h.transport_included AS host_transport_included
 FROM guests g
 JOIN accounts a ON a.db_accounts_id = g.fnc_accounts_id
 LEFT JOIN matches m ON m.fnc_guests_id = g.db_guests_id
