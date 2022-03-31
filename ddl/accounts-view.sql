@@ -2,7 +2,8 @@ DROP VIEW IF EXISTS accounts_info;
 
 CREATE OR REPLACE VIEW accounts_info AS
 SELECT
-    uid
+    db_accounts_id
+    ,uid
     ,name
     ,phone_num
     ,email

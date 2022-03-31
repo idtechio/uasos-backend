@@ -17,6 +17,11 @@ SELECT
     ,h.country
     ,h.phone_num
     ,h.email
+    ,h.closest_city
+    ,h.zipcode
+    ,h.street
+    ,h.building_no
+    ,h.appartment_no
     ,h.shelter_type
     ,h.beds
     ,h.acceptable_group_relations
@@ -27,6 +32,7 @@ SELECT
     ,h.ok_for_any_nationality
     ,h.duration_category
     ,h.transport_included
+    ,h.can_be_verified
 
     ,m.db_matches_id AS match_id
     ,CASE
