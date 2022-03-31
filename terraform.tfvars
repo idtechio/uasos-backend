@@ -32,10 +32,10 @@ gcf_timeout = 540
 # Functions
 
 gcf_hosts-insert_name = "hosts-insert"
-gcf_hosts-insert_pubsub_topic_name = "hosts"
+gcf_hosts-insert_pubsub_topic_name = "hosts-insert"
 
 gcf_guests-insert_name = "guests-insert"
-gcf_guests-insert_pubsub_topic_name = "guests"
+gcf_guests-insert_pubsub_topic_name = "guests-insert"
 
 gcf_matches-change-status_name = "matches-change-status" 
 gcf_matches-change-status_pubsub_topic_name = "matches_status_changes" 
