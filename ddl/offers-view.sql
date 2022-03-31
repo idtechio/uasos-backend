@@ -58,8 +58,20 @@ SELECT
         WHEN g.fnc_status='095' THEN 'match_accepted'
         ELSE 'default'
     END AS guest_status
+    ,g.acceptable_shelter_types AS guest_acceptable_shelter_types
+    ,g.beds AS guest_beds
+    ,g.group_relation AS guest_group_relation
+    ,g.is_pregnant AS guest_is_pregnant
+    ,g.is_with_disability AS guest_is_with_disability
+    ,g.is_with_animal AS guest_is_with_animal
+    ,g.is_with_elderly AS guest_is_with_elderly
+    ,g.is_ukrainian_nationality AS guest_is_ukrainian_nationality
+    ,g.duration_category AS guest_duration_category
 FROM hosts h
 JOIN accounts a ON a.db_accounts_id = h.fnc_accounts_id
 LEFT JOIN matches m ON m.fnc_hosts_id = h.db_hosts_id
 LEFT JOIN guests g ON g.db_guests_id = m.fnc_guests_id
 LEFT JOIN accounts ag ON ag.db_accounts_id = g.fnc_accounts_id;
+
+
+
