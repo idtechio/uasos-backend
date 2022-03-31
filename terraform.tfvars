@@ -74,5 +74,3 @@ gcf_refresh_beds_stats_pubsub_topic_name = "refresh_beds_stats"
 
 gcf_accounts_upsert_name = "accounts-upsert"
 gcf_accounts_upsert_pubsub_topic_name = "accounts-upsert"
-
-gcf_beds_stats_name = "beds-stats"

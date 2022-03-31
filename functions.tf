@@ -385,23 +385,3 @@ module "gcf_accounts_upsert" {
     SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
   }
 }
-
-module "gcf_beds_stats" {
-  source = "./modules/http_functions"
-  project_id = "${var.project_id}"
-  region = "${var.region}"
-
-  fnc_name    = "${var.gcf_beds_stats_name}"
-  fnc_folder  = "${var.gcf_beds_stats_name}"
-  fnc_target  = "${var.gcf_target}"
-  fnc_memory  = "${var.gcf_memory}"
-  fnc_timeout = "${var.gcf_timeout}"
-
-  fnc_service_account = "${module.gcf_sa.email}"
-
-  environment_variables = {
-    PROJECT_ID= "${var.project_id}"
-    DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
-    SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
-  }
-}

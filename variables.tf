@@ -246,8 +246,3 @@ variable "gcf_accounts_upsert_pubsub_topic_name" {
   type        = string
   description = "gcf_accounts_upsert_pubsub_topic_name"
 }
-
-variable "gcf_beds_stats_name" {
-  type        = string
-  description = "gcf_beds_stats_name"
-}
