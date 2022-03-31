@@ -72,7 +72,14 @@ gcf_listing-delete_pubsub_topic_name = "listing-delete"
 gcf_refresh_beds_stats_name = "refresh_beds_stats"
 gcf_refresh_beds_stats_pubsub_topic_name = "refresh_beds_stats"
 
-gcf_accounts_upsert_name = "accounts-upsert"
-gcf_accounts_upsert_pubsub_topic_name = "accounts-upsert"
+gcf_accounts-insert_name = "accounts-insert"
+gcf_accounts-insert_pubsub_topic_name = "accounts-insert"
 
-gcf_beds_stats_name = "beds-stats"
+gcf_accounts-update_name = "accounts-update"
+gcf_accounts-update_pubsub_topic_name = "accounts-update"
+
+gcf_hosts-update_name = "hosts-update"
+gcf_hosts-update_pubsub_topic_name = "hosts-update"
+
+gcf_guests-update_name = "guests-update"
+gcf_guests-update_pubsub_topic_name = "guests-update"
