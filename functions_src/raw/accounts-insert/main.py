@@ -123,7 +123,7 @@ def postgres_insert(db_pool, pubsub_msg):
 
     tbl_accounts = create_table_mapping(db_pool=db_pool, db_table_name=table_name)
 
-    if pubsub_msg['db_accounts_id']:
+    if 'db_accounts_id' in pubsub_msg.keys():
         raise ValueError(f'Key value "db_accounts_id" cannot have value for INSERT in "{pubsub_msg}"')
 
     pubsub_msg['preferred_lang'] = lowercase_stripped(pubsub_msg['preferred_lang'])
