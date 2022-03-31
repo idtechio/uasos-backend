@@ -236,3 +236,40 @@ variable "gcf_refresh_beds_stats_pubsub_topic_name" {
   type        = string
   description = "gcf_refresh_beds_stats_pubsub_topic_name"
 }
+
+variable "gcf_accounts-insert_name" {
+  description = "gcf_accounts-insert_name"
+  type        = string
+}
+
+variable "gcf_accounts-insert_pubsub_topic_name" {
+  type        = string
+  description = "gcf_accounts-insert_pubsub_topic_name"
+}
+variable "gcf_accounts-update_name" {
+  description = "gcf_accounts-update_name"
+  type        = string
+}
+
+variable "gcf_accounts-update_pubsub_topic_name" {
+  type        = string
+  description = "gcf_accounts-update_pubsub_topic_name"
+}
+variable "gcf_hosts-update_name" {
+  description = "gcf_hosts-update_name"
+  type        = string
+}
+
+variable "gcf_hosts-update_pubsub_topic_name" {
+  type        = string
+  description = "gcf_hosts-update_pubsub_topic_name"
+}
+variable "gcf_guests-update_name" {
+  description = "gcf_guests-update_name"
+  type        = string
+}
+
+variable "gcf_guests-update_pubsub_topic_name" {
+  type        = string
+  description = "gcf_guests-update_pubsub_topic_name"
+}
