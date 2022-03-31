@@ -1,4 +1,0 @@
-sendgrid:
-      GUESTANDHOSTMATCHCONFIRM: "d-4b189c34ff584451a1dc1f83421a7d21"
-sms:
-      sealed_notification: "We have a contact for you! Check your email and confirm."

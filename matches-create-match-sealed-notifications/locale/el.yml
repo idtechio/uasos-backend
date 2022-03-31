@@ -1,0 +1,29 @@
+staticValues:
+    'groupRelations':
+        'single_man': ''
+        'single_woman': ''
+        'spouses': ''
+        'mother_with_children': ''
+        'family_with_children': ''
+        'unrelated_group': ''
+    'accommodationTypes':
+        'bed': ''
+        'room': ''
+        'flat': ''
+        'house': ''
+        'public_shared_space': ''
+    'boolean':
+        'yes': ''
+        'no': ''
+messaging:
+    'sms':
+        'offeringNotification': ''
+        'sealedNotification': ''
+common:
+    'nationalities':
+        'ukrainian': ''
+        'nonUkarainian': ''
+sendgrid:
+    'HostGetsMatch': ''
+    'GuestGetsMatch': ''
+    'GUESTANDHOSTMATCHCONFIRM': ''
