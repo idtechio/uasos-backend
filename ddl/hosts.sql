@@ -11,6 +11,11 @@ CREATE TABLE IF NOT EXISTS hosts (
     ,phone_num VARCHAR
     ,email VARCHAR
     ,city VARCHAR
+    ,closest_city VARCHAR
+    ,zipcode VARCHAR
+    ,street VARCHAR
+    ,building_no VARCHAR
+    ,appartment_no VARCHAR
     ,shelter_type VARCHAR
     ,beds INTEGER
     ,acceptable_group_relations VARCHAR
@@ -21,4 +26,5 @@ CREATE TABLE IF NOT EXISTS hosts (
     ,ok_for_any_nationality VARCHAR
     ,duration_category VARCHAR
     ,transport_included VARCHAR
+    ,can_be_verified VARCHAR
 );
