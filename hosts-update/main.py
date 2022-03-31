@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import *
 
 from google.cloud import secretmanager
 
+
 # region configuration context
 def query_configuration_context(secret_id):
     client = secretmanager.SecretManagerServiceClient()
@@ -85,14 +86,13 @@ def lowercase_stripped(value):
 # endregion
 
 
-# region Enum definitions
-class HostsGuestsStatus(Enum):
-    MOD_REJECTED = "045"
-    DEFAULT = "055"
-    MOD_ACCEPTED = "065"
-    FNC_BEING_PROCESSED = "075"
-    FNC_MATCHED = "085"
-    MATCH_ACCEPTED = "095"
+# region integration utilities
+def fnc_target(event, context):
+    if not running_locally:
+        pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
+    else:
+        pubsub_msg = json.loads(event["data"])
+    postgres_insert(db_pool=db, pubsub_msg=pubsub_msg)
 # endregion
 
 
@@ -105,30 +105,29 @@ def create_table_mapping(db_pool, table_name):
 # endregion
 
 
-# region integration utilities
-def fnc_target(event, context):
-    if not running_locally:
-        pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
-    else:
-        pubsub_msg = json.loads(event["data"])
-    postgres_insert(db, pubsub_msg)
+# region Enum definitions
+class HostsGuestsStatus(Enum):
+    MOD_REJECTED = "045"
+    DEFAULT = "055"
+    MOD_ACCEPTED = "065"
+    FNC_BEING_PROCESSED = "075"
+    FNC_MATCHED = "085"
+    MATCH_ACCEPTED = "095"
 # endregion
 
 
 # region data mutation services
 def postgres_insert(db_pool, pubsub_msg):
-    table_name = os.environ["GUESTS_TABLE_NAME"]
-    tbl_guests = create_table_mapping(db_pool=db_pool, table_name=table_name)
+    table_name = os.environ["HOSTS_TABLE_NAME"]
+    tbl_hosts = create_table_mapping(db_pool=db_pool, table_name=table_name)
 
-    if pubsub_msg['db_guests_id']:
-        raise ValueError(f'Key value "db_guests_id" cannot have value for INSERT in "{pubsub_msg}"')
+    if not pubsub_msg['db_hosts_id']:
+        raise ValueError(f'key value "db_hosts_id" is missing for UPDATE in "{pubsub_msg}"')
 
     pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
-    pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED
-
     payload = nvl(pubsub_msg)
 
-    stmt = tbl_guests.insert()
+    stmt = tbl_hosts.update()
 
     with db.connect() as conn:
         with conn.begin():
