@@ -1,0 +1,5 @@
+google-cloud-pubsub==2.8.0
+pg8000==1.22.0
+SQLAlchemy==1.4.22
+python-dotenv==0.19.2
+google-cloud-secret-manager==2.8.0
