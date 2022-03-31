@@ -123,7 +123,8 @@ def postgres_update(db_pool, pubsub_msg):
     if 'db_guests_id' not in pubsub_msg.keys():
         raise ValueError(f'key value "db_guests_id" is missing for UPDATE in "{pubsub_msg}"')
 
-    pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
+    if 'email' in pubsub_msg.keys():
+        pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
 
     payload = nvl(pubsub_msg)
 

@@ -123,7 +123,9 @@ def postgres_insert(db_pool, pubsub_msg):
     if 'db_guests_id' in pubsub_msg.keys():
         raise ValueError(f'Key value "db_guests_id" cannot have value for INSERT in "{pubsub_msg}"')
 
-    pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
+    if 'email' in pubsub_msg.keys():
+        pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
+        
     pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED
 
     payload = nvl(pubsub_msg)

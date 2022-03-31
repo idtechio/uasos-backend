@@ -126,7 +126,9 @@ def postgres_insert(db_pool, pubsub_msg):
 
     pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED
 
-    pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
+    if 'email' in pubsub_msg.keys():
+        pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
+
     payload = nvl(pubsub_msg)
 
     stmt = tbl_hosts.insert()
