@@ -120,7 +120,7 @@ def postgres_update(db_pool, pubsub_msg):
     table_name = os.environ["GUESTS_TABLE_NAME"]
     tbl_guests = create_table_mapping(db_pool=db_pool, table_name=table_name)
 
-    if not pubsub_msg['db_guests_id']:
+    if 'db_guests_id' not in pubsub_msg.keys():
         raise ValueError(f'key value "db_guests_id" is missing for UPDATE in "{pubsub_msg}"')
 
     pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])

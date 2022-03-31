@@ -121,7 +121,7 @@ def postgres_insert(db_pool, pubsub_msg):
     table_name = os.environ["HOSTS_TABLE_NAME"]
     tbl_hosts = create_table_mapping(db_pool=db_pool, table_name=table_name)
 
-    if not pubsub_msg['db_hosts_id']:
+    if 'db_hosts_id' not in pubsub_msg.keys():
         raise ValueError(f'key value "db_hosts_id" is missing for UPDATE in "{pubsub_msg}"')
 
     pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])

@@ -121,7 +121,7 @@ def postgres_insert(db_pool, pubsub_msg):
     table_name = os.environ["HOSTS_TABLE_NAME"]
     tbl_hosts = create_table_mapping(db_pool=db_pool, table_name=table_name)
 
-    if pubsub_msg['db_hosts_id']:
+    if 'db_hosts_id' in pubsub_msg.keys():
         raise ValueError(f'Key value "db_hosts_id" cannot have value for INSERT in "{pubsub_msg}"')
 
     pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED
