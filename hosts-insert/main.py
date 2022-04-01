@@ -6,6 +6,7 @@ import time
 from enum import Enum
 from sqlalchemy import create_engine, Table, MetaData, Column, inspect
 from sqlalchemy.dialects.postgresql import *
+import uuid #FIXME Assign db_accounts_id on db level
 
 from google.cloud import secretmanager
 
@@ -132,6 +133,7 @@ def postgres_insert(db_pool, pubsub_msg):
     column_names = {c.name for c in tbl_hosts.columns}
     empty_dict = dict.fromkeys(column_names, None)
     payload = nvl(empty_dict | pubsub_msg)
+    payload['db_hosts_id'] = str(uuid.uuid1()) #FIXME Assign db_accounts_id on db level
 
     stmt = tbl_hosts.insert()
 
