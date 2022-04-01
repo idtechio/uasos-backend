@@ -128,7 +128,9 @@ def postgres_insert(db_pool, pubsub_msg):
         
     pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED
 
-    payload = nvl(pubsub_msg)
+    column_names = {c.name for c in tbl_guests.columns}
+    empty_dict = dict.fromkeys(column_names, None)
+    payload = nvl(empty_dict | pubsub_msg)
 
     stmt = tbl_guests.insert()
 

@@ -128,7 +128,10 @@ def postgres_insert(db_pool, pubsub_msg):
 
     pubsub_msg['preferred_lang'] = lowercase_stripped(pubsub_msg['preferred_lang'])
     pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
-    payload = nvl(pubsub_msg)
+
+    column_names = {c.name for c in tbl_accounts.columns}
+    empty_dict = dict.fromkeys(column_names, None)
+    payload = nvl(empty_dict | pubsub_msg)
 
     with db.connect() as conn:
         with conn.begin():
