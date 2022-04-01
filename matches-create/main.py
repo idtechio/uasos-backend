@@ -109,9 +109,8 @@ class HostListing:
     """Illustrative description of a Polish host and their housing offer."""
 
     rid: str
-    name: str
     registration_date: datetime.datetime
-    listing_country: str
+    country: str
     listing_city: str
     shelter_type: str
     beds: int
@@ -130,9 +129,8 @@ class GuestListing:
     """Illustrative description of a Ukranian refugee and their housing need."""
 
     rid: str
-    name: str
     registration_date: datetime.datetime
-    listing_country: str
+    country: str
     listing_city: str
     beds: int
     is_pregnant: bool
@@ -159,7 +157,7 @@ def evaluate_pair(host: HostListing, guest: GuestListing, recent_matches, rid_pa
     """
 
     # Hard constraints
-    if guest.listing_country != host.listing_country:
+    if guest.country != host.country:
         return 0.0
     if guest.is_pregnant and not host.ok_for_pregnant:
         return 0.0
@@ -187,7 +185,7 @@ def evaluate_pair(host: HostListing, guest: GuestListing, recent_matches, rid_pa
     # Soft constraints
 
     # Score composition:
-    #  1% -> Guarant -> after passing hard constrants people should be ready to match
+    #  79% -> Guarant -> after passing hard constrants people should be ready to match
     #  1% -> Transport included
     #  5% -> Boosters for host activity related to response rate for previous offers
     #  5% -> Boosters for guest activity related to response rate for previous offers
@@ -279,7 +277,6 @@ def find_matches(hosts, guests, recent_matches, rid_pairs):
 # region Database data models
 def create_matches_table_mapping():
     table_name = os.environ["MATCHES_TABLE_NAME"]
-    # table_name = 'matches'
     meta = MetaData(db)
     tbl = Table(
         table_name,
@@ -304,11 +301,10 @@ def create_guests_table_mapping():
         table_name,
         meta,
         Column("db_guests_id", VARCHAR),
-        Column("name", VARCHAR),
         Column("city", VARCHAR),
         Column("fnc_status", VARCHAR),
-        Column("fnc_ts_registered", VARCHAR),
-        Column("listing_country", VARCHAR),
+        Column("db_ts_registered", VARCHAR),
+        Column("country", VARCHAR),
         Column("acceptable_shelter_types", VARCHAR),
         Column("beds", VARCHAR),
         Column("group_relation", VARCHAR),
@@ -331,11 +327,10 @@ def create_hosts_table_mapping():
         table_name,
         meta,
         Column("db_hosts_id", VARCHAR),
-        Column("name", VARCHAR),
         Column("fnc_status", VARCHAR),
-        Column("fnc_ts_registered", VARCHAR),
+        Column("db_ts_registered", VARCHAR),
         Column("city", VARCHAR),
-        Column("listing_country", VARCHAR),
+        Column("country", VARCHAR),
         Column("shelter_type", VARCHAR),
         Column("beds", VARCHAR),
         Column("acceptable_group_relations", VARCHAR),
@@ -457,16 +452,14 @@ def create_matching(pubsub_msg):
             result = conn.execute(sel_hosts)
 
             for row in result:
-                # print(epoch_with_milliseconds_to_datetime(row["fnc_ts_registered"]))
 
                 hosts.append(
                     HostListing(
                         rid=row["db_hosts_id"],
-                        name=row["name"],
                         registration_date=epoch_with_milliseconds_to_datetime(
-                            row["fnc_ts_registered"]
+                            row["db_ts_registered"]
                         ),
-                        listing_country=default_value(row["listing_country"], "poland"),
+                        country=default_value(row["country"], "poland"),
                         listing_city=row["city"],
                         shelter_type=query_string(row["shelter_type"]),
                         beds=int(row["beds"]),
@@ -524,11 +517,10 @@ def create_matching(pubsub_msg):
                 guests.append(
                     GuestListing(
                         rid=row["db_guests_id"],
-                        name=row["name"],
                         registration_date=epoch_with_milliseconds_to_datetime(
-                            row["fnc_ts_registered"]
+                            row["db_ts_registered"]
                         ),
-                        listing_country=default_value(row["listing_country"], "poland"),
+                        country=default_value(row["country"], "poland"),
                         listing_city=row["city"],
                         beds=int(row["beds"]),
                         is_pregnant=True if row["is_pregnant"] == "TRUE" else False,
