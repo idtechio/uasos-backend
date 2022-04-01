@@ -131,6 +131,7 @@ def postgres_insert(db_pool, pubsub_msg):
     column_names = {c.name for c in tbl_guests.columns}
     empty_dict = dict.fromkeys(column_names, None)
     payload = nvl(empty_dict | pubsub_msg)
+    payload['db_guests_id'] = str(uuid.uuid1()) #FIXME Assign db_accounts_id on db level
 
     stmt = tbl_guests.insert()
 

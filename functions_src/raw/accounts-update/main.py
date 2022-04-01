@@ -133,6 +133,7 @@ def postgres_update(db_pool, pubsub_msg):
         pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
 
     payload = nvl(pubsub_msg)
+    payload['db_accounts_id'] = str(uuid.uuid1()) #FIXME Assign db_accounts_id on db level
 
     with db.connect() as conn:
         with conn.begin():
