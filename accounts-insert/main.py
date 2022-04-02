@@ -5,7 +5,6 @@ import json
 import time
 from enum import Enum
 from sqlalchemy import create_engine, Table, MetaData
-import uuid #FIXME Assign db_accounts_id on db level
 
 from google.cloud import secretmanager
 
@@ -112,7 +111,12 @@ def fnc_target(event, context):
 def create_table_mapping(db_pool, db_table_name):
     meta = MetaData(db_pool)
     tbl = Table(db_table_name, meta, autoload=True, autoload_with=db_pool)
+    return tbl
 
+def filter_table_mapping(tbl):
+    columns_to_filter = [col for col in tbl._columns if col.name.lower().startswith('db_')]
+    for col in columns_to_filter:
+        tbl._columns.remove(col)
     return tbl
 # endregion
 
@@ -123,6 +127,7 @@ def postgres_insert(db_pool, pubsub_msg):
     table_name = os.environ["ACCOUNTS_TABLE_NAME"]
 
     tbl_accounts = create_table_mapping(db_pool=db_pool, db_table_name=table_name)
+    tbl_accounts_filtered = filter_table_mapping(tbl_accounts)
 
     if 'db_accounts_id' in pubsub_msg.keys():
         raise ValueError(f'Key value "db_accounts_id" cannot have value for INSERT in "{pubsub_msg}"')
@@ -130,14 +135,14 @@ def postgres_insert(db_pool, pubsub_msg):
     pubsub_msg['preferred_lang'] = lowercase_stripped(pubsub_msg['preferred_lang'])
     pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
 
-    column_names = {c.name for c in tbl_accounts.columns}
+    column_names = {c.name for c in tbl_accounts_filtered.columns}
     empty_dict = dict.fromkeys(column_names, None)
-    payload = nvl(empty_dict | pubsub_msg)
-    payload['db_accounts_id'] = str(uuid.uuid1()) #FIXME Assign db_accounts_id on db level
+    valid_dict = empty_dict | {k: pubsub_msg[k] for k in pubsub_msg if k in empty_dict}
+    payload = nvl(valid_dict)
 
     with db.connect() as conn:
         with conn.begin():
-            stmt = tbl_accounts.insert()
+            stmt = tbl_accounts_filtered.insert()
             print(f"prepared INSERT statement for table={table_name}")
 
             conn.execute(stmt.values(**payload))
