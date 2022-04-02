@@ -132,8 +132,11 @@ def postgres_insert(db_pool, pubsub_msg):
     if 'db_accounts_id' in pubsub_msg.keys():
         raise ValueError(f'Key value "db_accounts_id" cannot have value for INSERT in "{pubsub_msg}"')
 
-    pubsub_msg['preferred_lang'] = lowercase_stripped(pubsub_msg['preferred_lang'])
-    pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
+    if 'preferred_lang' in pubsub_msg.keys():
+        pubsub_msg['preferred_lang'] = lowercase_stripped(pubsub_msg['preferred_lang'])
+
+    if 'email' in pubsub_msg.keys():
+        pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
 
     column_names = {c.name for c in tbl_accounts_filtered.columns}
     empty_dict = dict.fromkeys(column_names, None)
