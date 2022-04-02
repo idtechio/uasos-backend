@@ -282,7 +282,7 @@ def create_matches_table_mapping():
         table_name,
         meta,
         Column("db_matches_id", VARCHAR),
-        Column("fnc_ts_matched", VARCHAR),
+        Column("db_ts_matched", VARCHAR),
         Column("fnc_status", VARCHAR),
         Column("fnc_hosts_id", VARCHAR),
         Column("fnc_guests_id", VARCHAR),
@@ -565,7 +565,7 @@ def create_matching(pubsub_msg):
 
             # Create rid_pairs set
             existing_pairs_stmt = sqlalchemy.text(
-                f"SELECT DISTINCT ma.fnc_ts_matched, ma.fnc_hosts_id, ma.fnc_guests_id FROM matches ma JOIN hosts ho ON ma.fnc_hosts_id = ho.db_hosts_id JOIN guests gu ON ma.fnc_guests_id = gu.db_guests_id WHERE ho.fnc_status = '075' OR gu.fnc_status = '075';"
+                f"SELECT DISTINCT ma.db_ts_matched, ma.fnc_hosts_id, ma.fnc_guests_id FROM matches ma JOIN hosts ho ON ma.fnc_hosts_id = ho.db_hosts_id JOIN guests gu ON ma.fnc_guests_id = gu.db_guests_id WHERE ho.fnc_status = '075' OR gu.fnc_status = '075';"
             )
             existing_pairs_result = conn.execute(existing_pairs_stmt)
             rid_pairs = set()
@@ -588,7 +588,7 @@ def create_matching(pubsub_msg):
                 )
             )
             for row in sel_matches_result:
-                if row["fnc_ts_matched"] > day_filter:
+                if row["db_ts_matched"] > day_filter:
                     recent_matches.append(row)
 
     # endregion
@@ -608,7 +608,7 @@ def create_matching(pubsub_msg):
                 # print(f"match (guest={guest.rid}, host={host.rid})")
 
                 ins_match = tbl_matches.insert().values(
-                    fnc_ts_matched=f"{query_epoch_with_milliseconds()}",
+                    db_ts_matched=f"{query_epoch_with_milliseconds()}",
                     fnc_status=MatchesStatus.DEFAULT,
                     fnc_hosts_id=host.rid,
                     fnc_guests_id=guest.rid,
