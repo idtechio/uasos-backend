@@ -6,7 +6,6 @@ import time
 from enum import Enum
 from sqlalchemy import create_engine, Table, MetaData, Column, inspect
 from sqlalchemy.dialects.postgresql import *
-import uuid #FIXME Assign db_accounts_id on db level
 
 from google.cloud import secretmanager
 
@@ -101,7 +100,12 @@ class HostsGuestsStatus(Enum):
 def create_table_mapping(db_pool, table_name):
     meta = MetaData(db_pool)
     tbl = Table(table_name, meta, autoload=True, autoload_with=db_pool)
+    return tbl
 
+def filter_table_mapping(tbl):
+    columns_to_filter = [col for col in tbl._columns if col.name.lower().startswith('db_')]
+    for col in columns_to_filter:
+        tbl._columns.remove(col)
     return tbl
 # endregion
 
@@ -120,6 +124,7 @@ def fnc_target(event, context):
 def postgres_insert(db_pool, pubsub_msg):
     table_name = os.environ["GUESTS_TABLE_NAME"]
     tbl_guests = create_table_mapping(db_pool=db_pool, table_name=table_name)
+    tbl_guests_filtered = filter_table_mapping(tbl_guests)
 
     if 'db_guests_id' in pubsub_msg.keys():
         raise ValueError(f'Key value "db_guests_id" cannot have value for INSERT in "{pubsub_msg}"')
@@ -129,12 +134,12 @@ def postgres_insert(db_pool, pubsub_msg):
         
     pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED
 
-    column_names = {c.name for c in tbl_guests.columns}
+    column_names = {c.name for c in tbl_guests_filtered.columns}
     empty_dict = dict.fromkeys(column_names, None)
-    payload = nvl(empty_dict | pubsub_msg)
-    payload['db_guests_id'] = str(uuid.uuid1()) #FIXME Assign db_accounts_id on db level
+    valid_dict = empty_dict | {k: pubsub_msg[k] for k in pubsub_msg if k in empty_dict}
+    payload = nvl(valid_dict)
 
-    stmt = tbl_guests.insert()
+    stmt = tbl_guests_filtered.insert()
 
     with db.connect() as conn:
         with conn.begin():
