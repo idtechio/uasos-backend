@@ -136,7 +136,8 @@ def postgres_insert(db_pool, pubsub_msg):
 
     column_names = {c.name for c in tbl_guests_filtered.columns}
     empty_dict = dict.fromkeys(column_names, None)
-    payload = nvl(empty_dict | pubsub_msg)
+    valid_dict = empty_dict | {k: pubsub_msg[k] for k in pubsub_msg if k in empty_dict}
+    payload = nvl(valid_dict)
 
     stmt = tbl_guests_filtered.insert()
 
