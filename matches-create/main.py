@@ -109,7 +109,7 @@ class HostListing:
     """Illustrative description of a Polish host and their housing offer."""
 
     rid: str
-    registration_date: datetime.datetime
+    # registration_date: datetime.datetime
     country: str
     closest_city: str
     shelter_type: str
@@ -129,9 +129,9 @@ class GuestListing:
     """Illustrative description of a Ukranian refugee and their housing need."""
 
     rid: str
-    registration_date: datetime.datetime
+    # registration_date: datetime.datetime
     country: str
-    closest_city: str
+    city: str
     beds: int
     is_pregnant: bool
     is_with_disability: bool
@@ -179,7 +179,7 @@ def evaluate_pair(host: HostListing, guest: GuestListing, recent_matches, rid_pa
         return 0.0
     if (host.rid, guest.rid) in rid_pairs:
         return 0.0
-    if host.closest_city != guest.closest_city and guest.closest_city is not None:
+    if host.closest_city != guest.city and guest.city is not None:
         return 0.0
 
     # Soft constraints
@@ -301,7 +301,7 @@ def create_guests_table_mapping():
         table_name,
         meta,
         Column("db_guests_id", VARCHAR),
-        Column("closest_city", VARCHAR),
+        Column("city", VARCHAR),
         Column("fnc_status", VARCHAR),
         Column("db_ts_registered", VARCHAR),
         Column("country", VARCHAR),
@@ -456,9 +456,9 @@ def create_matching(pubsub_msg):
                 hosts.append(
                     HostListing(
                         rid=row["db_hosts_id"],
-                        registration_date=epoch_with_milliseconds_to_datetime(
-                            row["db_ts_registered"]
-                        ),
+                        # registration_date=epoch_with_milliseconds_to_datetime(
+                        #     row["db_ts_registered"]
+                        # ),
                         country=default_value(row["country"], "poland"),
                         closest_city=row["closest_city"],
                         shelter_type=query_string(row["shelter_type"]),
@@ -517,11 +517,11 @@ def create_matching(pubsub_msg):
                 guests.append(
                     GuestListing(
                         rid=row["db_guests_id"],
-                        registration_date=epoch_with_milliseconds_to_datetime(
-                            row["db_ts_registered"]
-                        ),
+                        # registration_date=epoch_with_milliseconds_to_datetime(
+                        #     row["db_ts_registered"]
+                        # ),
                         country=default_value(row["country"], "poland"),
-                        closest_city=row["closest_city"],
+                        city=row["city"],
                         beds=int(row["beds"]),
                         is_pregnant=True if row["is_pregnant"] == "TRUE" else False,
                         is_with_disability=True
