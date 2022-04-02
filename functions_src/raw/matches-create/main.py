@@ -111,7 +111,7 @@ class HostListing:
     rid: str
     registration_date: datetime.datetime
     country: str
-    listing_city: str
+    closest_city: str
     shelter_type: str
     beds: int
     acceptable_group_relations: list
@@ -131,7 +131,7 @@ class GuestListing:
     rid: str
     registration_date: datetime.datetime
     country: str
-    listing_city: str
+    closest_city: str
     beds: int
     is_pregnant: bool
     is_with_disability: bool
@@ -179,7 +179,7 @@ def evaluate_pair(host: HostListing, guest: GuestListing, recent_matches, rid_pa
         return 0.0
     if (host.rid, guest.rid) in rid_pairs:
         return 0.0
-    if host.listing_city != guest.listing_city and guest.listing_city is not None:
+    if host.closest_city != guest.closest_city and guest.closest_city is not None:
         return 0.0
 
     # Soft constraints
@@ -301,7 +301,7 @@ def create_guests_table_mapping():
         table_name,
         meta,
         Column("db_guests_id", VARCHAR),
-        Column("city", VARCHAR),
+        Column("closest_city", VARCHAR),
         Column("fnc_status", VARCHAR),
         Column("db_ts_registered", VARCHAR),
         Column("country", VARCHAR),
@@ -329,7 +329,7 @@ def create_hosts_table_mapping():
         Column("db_hosts_id", VARCHAR),
         Column("fnc_status", VARCHAR),
         Column("db_ts_registered", VARCHAR),
-        Column("city", VARCHAR),
+        Column("closest_city", VARCHAR),
         Column("country", VARCHAR),
         Column("shelter_type", VARCHAR),
         Column("beds", VARCHAR),
@@ -460,7 +460,7 @@ def create_matching(pubsub_msg):
                             row["db_ts_registered"]
                         ),
                         country=default_value(row["country"], "poland"),
-                        listing_city=row["city"],
+                        closest_city=row["closest_city"],
                         shelter_type=query_string(row["shelter_type"]),
                         beds=int(row["beds"]),
                         acceptable_group_relations=query_list(
@@ -521,7 +521,7 @@ def create_matching(pubsub_msg):
                             row["db_ts_registered"]
                         ),
                         country=default_value(row["country"], "poland"),
-                        listing_city=row["city"],
+                        closest_city=row["closest_city"],
                         beds=int(row["beds"]),
                         is_pregnant=True if row["is_pregnant"] == "TRUE" else False,
                         is_with_disability=True
