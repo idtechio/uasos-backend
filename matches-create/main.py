@@ -109,7 +109,7 @@ class HostListing:
     """Illustrative description of a Polish host and their housing offer."""
 
     rid: str
-    # registration_date: datetime.datetime
+    registration_date: datetime.datetime
     country: str
     closest_city: str
     shelter_type: str
@@ -129,7 +129,7 @@ class GuestListing:
     """Illustrative description of a Ukranian refugee and their housing need."""
 
     rid: str
-    # registration_date: datetime.datetime
+    registration_date: datetime.datetime
     country: str
     city: str
     beds: int
@@ -456,9 +456,9 @@ def create_matching(pubsub_msg):
                 hosts.append(
                     HostListing(
                         rid=row["db_hosts_id"],
-                        # registration_date=epoch_with_milliseconds_to_datetime(
-                        #     row["db_ts_registered"]
-                        # ),
+                        registration_date=epoch_with_milliseconds_to_datetime(
+                            row["db_ts_registered"]
+                        ),
                         country=default_value(row["country"], "poland"),
                         closest_city=row["closest_city"],
                         shelter_type=query_string(row["shelter_type"]),
@@ -517,9 +517,9 @@ def create_matching(pubsub_msg):
                 guests.append(
                     GuestListing(
                         rid=row["db_guests_id"],
-                        # registration_date=epoch_with_milliseconds_to_datetime(
-                        #     row["db_ts_registered"]
-                        # ),
+                        registration_date=epoch_with_milliseconds_to_datetime(
+                            row["db_ts_registered"]
+                        ),
                         country=default_value(row["country"], "poland"),
                         city=row["city"],
                         beds=int(row["beds"]),
