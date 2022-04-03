@@ -17,8 +17,8 @@ SELECT
     END AS host_status
     ,h.city
     ,h.country
-    ,coalesce(h.phone_num, a.phone_num) AS phone_num
-    ,coalesce(h.email, a.email) AS email
+    ,a.phone_num AS phone_num
+    ,a.email AS email
     ,h.closest_city
     ,h.zipcode
     ,h.street
@@ -49,8 +49,8 @@ SELECT
     ,ag.name AS guest_name
     ,g.city AS guest_city
     ,g.country AS guest_country
-    ,CASE WHEN m.fnc_status='075' THEN coalesce(g.phone_num, ag.phone_num) ELSE '' END AS guest_phone_num
-    ,CASE WHEN m.fnc_status='075' THEN coalesce(g.email, ag.email) ELSE '' END AS guest_email
+    ,CASE WHEN m.fnc_status='075' THEN ag.phone_num ELSE '' END AS guest_phone_num
+    ,CASE WHEN m.fnc_status='075' THEN ag.email ELSE '' END AS guest_email
     ,CASE
         WHEN g.fnc_status='045' THEN 'rejected'
         WHEN g.fnc_status='065' THEN 'accepted'
