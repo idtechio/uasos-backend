@@ -109,7 +109,7 @@ class HostListing:
     """Illustrative description of a Polish host and their housing offer."""
 
     rid: str
-    # registration_date: datetime.datetime
+    registration_date: datetime.datetime
     country: str
     closest_city: str
     shelter_type: str
@@ -129,7 +129,7 @@ class GuestListing:
     """Illustrative description of a Ukranian refugee and their housing need."""
 
     rid: str
-    # registration_date: datetime.datetime
+    registration_date: datetime.datetime
     country: str
     city: str
     beds: int
@@ -282,7 +282,7 @@ def create_matches_table_mapping():
         table_name,
         meta,
         Column("db_matches_id", VARCHAR),
-        Column("fnc_ts_matched", VARCHAR),
+        Column("db_ts_matched", VARCHAR),
         Column("fnc_status", VARCHAR),
         Column("fnc_hosts_id", VARCHAR),
         Column("fnc_guests_id", VARCHAR),
@@ -456,9 +456,9 @@ def create_matching(pubsub_msg):
                 hosts.append(
                     HostListing(
                         rid=row["db_hosts_id"],
-                        # registration_date=epoch_with_milliseconds_to_datetime(
-                        #     row["db_ts_registered"]
-                        # ),
+                        registration_date=epoch_with_milliseconds_to_datetime(
+                            row["db_ts_registered"]
+                        ),
                         country=default_value(row["country"], "poland"),
                         closest_city=row["closest_city"],
                         shelter_type=query_string(row["shelter_type"]),
@@ -517,9 +517,9 @@ def create_matching(pubsub_msg):
                 guests.append(
                     GuestListing(
                         rid=row["db_guests_id"],
-                        # registration_date=epoch_with_milliseconds_to_datetime(
-                        #     row["db_ts_registered"]
-                        # ),
+                        registration_date=epoch_with_milliseconds_to_datetime(
+                            row["db_ts_registered"]
+                        ),
                         country=default_value(row["country"], "poland"),
                         city=row["city"],
                         beds=int(row["beds"]),
@@ -565,7 +565,7 @@ def create_matching(pubsub_msg):
 
             # Create rid_pairs set
             existing_pairs_stmt = sqlalchemy.text(
-                f"SELECT DISTINCT ma.fnc_ts_matched, ma.fnc_hosts_id, ma.fnc_guests_id FROM matches ma JOIN hosts ho ON ma.fnc_hosts_id = ho.db_hosts_id JOIN guests gu ON ma.fnc_guests_id = gu.db_guests_id WHERE ho.fnc_status = '075' OR gu.fnc_status = '075';"
+                f"SELECT DISTINCT ma.db_ts_matched, ma.fnc_hosts_id, ma.fnc_guests_id FROM matches ma JOIN hosts ho ON ma.fnc_hosts_id = ho.db_hosts_id JOIN guests gu ON ma.fnc_guests_id = gu.db_guests_id WHERE ho.fnc_status = '075' OR gu.fnc_status = '075';"
             )
             existing_pairs_result = conn.execute(existing_pairs_stmt)
             rid_pairs = set()
@@ -588,7 +588,7 @@ def create_matching(pubsub_msg):
                 )
             )
             for row in sel_matches_result:
-                if row["fnc_ts_matched"] > day_filter:
+                if row["db_ts_matched"] > day_filter:
                     recent_matches.append(row)
 
     # endregion
@@ -608,7 +608,7 @@ def create_matching(pubsub_msg):
                 # print(f"match (guest={guest.rid}, host={host.rid})")
 
                 ins_match = tbl_matches.insert().values(
-                    fnc_ts_matched=f"{query_epoch_with_milliseconds()}",
+                    db_ts_matched=f"{query_epoch_with_milliseconds()}",
                     fnc_status=MatchesStatus.DEFAULT,
                     fnc_hosts_id=host.rid,
                     fnc_guests_id=guest.rid,
