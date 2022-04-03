@@ -102,11 +102,21 @@ def create_table_mapping(db_pool, table_name):
     tbl = Table(table_name, meta, autoload=True, autoload_with=db_pool)
     return tbl
 
+
 def filter_table_mapping(tbl):
     columns_to_filter = [col for col in tbl._columns if col.name.lower().startswith('db_')]
     for col in columns_to_filter:
         tbl._columns.remove(col)
     return tbl
+
+
+def add_missing_fields_in_payload(pubsub_msg, tbl):
+    column_names = {c.name for c in tbl.columns}
+    empty_dict = dict.fromkeys(column_names, None)
+    valid_dict = empty_dict | {k: pubsub_msg[k] for k in pubsub_msg if k in empty_dict}
+    payload = nvl(valid_dict)
+
+    return payload
 # endregion
 
 
@@ -123,8 +133,8 @@ def fnc_target(event, context):
 # region data mutation services
 def postgres_insert(db_pool, pubsub_msg):
     table_name = os.environ["GUESTS_TABLE_NAME"]
-    tbl_guests = create_table_mapping(db_pool=db_pool, table_name=table_name)
-    tbl_guests_filtered = filter_table_mapping(tbl_guests)
+    tbl_guests_raw = create_table_mapping(db_pool=db_pool, table_name=table_name)
+    tbl_guests = filter_table_mapping(tbl_guests_raw)
 
     if 'db_guests_id' in pubsub_msg.keys():
         raise ValueError(f'Key value "db_guests_id" cannot have value for INSERT in "{pubsub_msg}"')
@@ -134,12 +144,9 @@ def postgres_insert(db_pool, pubsub_msg):
         
     pubsub_msg['fnc_status'] = HostsGuestsStatus.MOD_ACCEPTED
 
-    column_names = {c.name for c in tbl_guests_filtered.columns}
-    empty_dict = dict.fromkeys(column_names, None)
-    valid_dict = empty_dict | {k: pubsub_msg[k] for k in pubsub_msg if k in empty_dict}
-    payload = nvl(valid_dict)
+    payload = add_missing_fields_in_payload(pubsub_msg, tbl_guests)
 
-    stmt = tbl_guests_filtered.insert()
+    stmt = tbl_guests.insert()
 
     with db.connect() as conn:
         with conn.begin():
