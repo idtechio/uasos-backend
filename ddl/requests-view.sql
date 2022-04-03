@@ -39,7 +39,7 @@ SELECT
     END AS match_status
 
     ,h.db_hosts_id AS host_id
-    ,ah.name AS host_name
+    ,CASE WHEN m.fnc_status='075' THEN ah.name ELSE '' END AS host_name
     ,h.city AS host_city
     ,h.country AS host_country
     ,CASE WHEN m.fnc_status='075' THEN ah.phone_num ELSE '' END AS host_phone_num
