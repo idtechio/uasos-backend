@@ -102,11 +102,21 @@ def create_table_mapping(db_pool, table_name):
     tbl = Table(table_name, meta, autoload=True, autoload_with=db_pool)
     return tbl
 
+
 def filter_table_mapping(tbl):
     columns_to_filter = [col for col in tbl._columns if col.name.lower().startswith('db_')]
     for col in columns_to_filter:
         tbl._columns.remove(col)
     return tbl
+
+
+def add_missing_fields_in_payload(pubsub_msg, tbl):
+    column_names = {c.name for c in tbl.columns}
+    empty_dict = dict.fromkeys(column_names, None)
+    valid_dict = empty_dict | {k: pubsub_msg[k] for k in pubsub_msg if k in empty_dict}
+    payload = nvl(valid_dict)
+
+    return payload
 # endregion
 
 
@@ -135,10 +145,7 @@ def postgres_insert(db_pool, pubsub_msg):
     if 'email' in pubsub_msg.keys():
         pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
 
-    column_names = {c.name for c in tbl_hosts_filtered.columns}
-    empty_dict = dict.fromkeys(column_names, None)
-    valid_dict = empty_dict | {k: pubsub_msg[k] for k in pubsub_msg if k in empty_dict}
-    payload = nvl(valid_dict)
+    payload = add_missing_fields_in_payload(pubsub_msg, tbl_hosts)
 
     stmt = tbl_hosts_filtered.insert()
 
