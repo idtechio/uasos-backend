@@ -49,8 +49,8 @@ SELECT
     ,ag.name AS guest_name
     ,g.city AS guest_city
     ,g.country AS guest_country
-    ,coalesce(g.phone_num, ag.phone_num) AS guest_phone_num
-    ,coalesce(g.email, ag.email) AS guest_email
+    ,CASE WHEN m.fnc_status='075' THEN coalesce(g.phone_num, ag.phone_num) ELSE '' END AS guest_phone_num
+    ,CASE WHEN m.fnc_status='075' THEN coalesce(g.email, ag.email) ELSE '' END AS guest_email
     ,CASE
         WHEN g.fnc_status='045' THEN 'rejected'
         WHEN g.fnc_status='065' THEN 'accepted'
