@@ -261,14 +261,14 @@ variable "gcf_accounts-update_pubsub_topic_name" {
   description = "gcf_accounts-update_pubsub_topic_name"
 }
 
-variable "gcf_accounts-update_name" {
-  description = "gcf_accounts-update_name"
+variable "gcf_accounts-migrate_name" {
+  description = "gcf_accounts-migrate_name"
   type        = string
 }
 
-variable "gcf_accounts-update_pubsub_topic_name" {
+variable "gcf_accounts-migrate_pubsub_topic_name" {
   type        = string
-  description = "gcf_accounts-update_pubsub_topic_name"
+  description = "gcf_accounts-migrate_pubsub_topic_name"
 }
 
 variable "gcf_hosts-update_name" {
