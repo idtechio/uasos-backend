@@ -79,6 +79,9 @@ gcf_accounts-insert_pubsub_topic_name = "accounts-insert"
 gcf_accounts-update_name = "accounts-update"
 gcf_accounts-update_pubsub_topic_name = "accounts-update"
 
+gcf_accounts-migrate_name = "accounts-migrate"
+gcf_accounts-migrate_pubsub_topic_name = "accounts-migrate"
+
 gcf_hosts-update_name = "hosts-update"
 gcf_hosts-update_pubsub_topic_name = "hosts-update"
 

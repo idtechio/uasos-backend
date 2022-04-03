@@ -429,6 +429,32 @@ module "gcf_accounts-update" {
   }
 }
 
+module "gcf_accounts-migrate" {
+  source = "./modules/pub_sub_functions"
+  project_id = "${var.project_id}"
+  region = "${var.region}"
+
+  fnc_name    = "${var.gcf_accounts-migrate_name}"
+  fnc_folder  = "${var.gcf_accounts-migrate_name}"
+  fnc_target  = "${var.gcf_target}"
+  fnc_memory  = "${var.gcf_memory}"
+  fnc_timeout = "${var.gcf_timeout}"
+
+  fnc_pubsub_topic_name = "${var.gcf_accounts-migrate_pubsub_topic_name}"
+
+  fnc_service_account = "${module.gcf_sa.email}"
+
+  environment_variables = {
+    PROJECT_ID= "${var.project_id}"
+    DB_CONNECTION_NAME= "${var.project_id}:${var.region}:${var.cloud_sql_instance_name}"
+    SECRET_CONFIGURATION_CONTEXT= "${var.gcf_secret_configuration_context}"
+    HOSTS_TABLE_NAME= "${var.gcf_hosts_table_name}"
+    GUESTS_TABLE_NAME= "${var.gcf_guests_table_name}"
+    MATCHES_TABLE_NAME= "${var.gcf_matches_table_name}"
+    ACCOUNTS_TABLE_NAME= "${var.gcf_accounts_table_name}"
+  }
+}
+
 module "gcf_hosts-update" {
   source = "./modules/pub_sub_functions"
   project_id = "${var.project_id}"
