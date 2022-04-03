@@ -10,6 +10,7 @@ from sqlalchemy.dialects.postgresql import *
 from google.cloud import secretmanager
 
 
+# region configuration context
 def query_configuration_context(secret_id):
     client = secretmanager.SecretManagerServiceClient()
     secret_name = (
@@ -32,8 +33,10 @@ else:
 
     print(f"Running locally")
     load_dotenv()
+# endregion
 
 
+# region database connectivity
 def create_db_engine():
     db_config = {
         "drivername": "postgresql+pg8000",
@@ -64,8 +67,10 @@ def create_db_engine():
 
 
 db = create_db_engine()
+# endregion
 
 
+# region Enum definitions
 class MatchesStatus(Enum):
     DEFAULT = "055"
     FNC_AWAITING_RESPONSE = "065"
@@ -81,36 +86,47 @@ class HostsGuestsStatus(Enum):
     FNC_BEING_PROCESSED = "075"
     FNC_MATCHED = "085"
     MATCH_ACCEPTED = "095"
+# endregion
 
 
+# region utility functions
 def query_status(input_payload):
     return {1: MatchesStatus.MATCH_ACCEPTED, 0: MatchesStatus.MATCH_REJECTED}.get(
         int(input_payload["accepted"]), MatchesStatus.DEFAULT
     )
+# endregion
 
 
-def create_matches_table_mapping():
-    meta = MetaData(db)
-    # FIXME: changes table name to use environmental variable like other functions
-    tbl = Table(
-        "matches",
-        meta,
-        Column("db_matches_id", VARCHAR),
-        Column("fnc_host_status", VARCHAR),
-        Column("fnc_guest_status", VARCHAR),
-        Column("fnc_status", VARCHAR),
-    )
-
+# region Database data models
+def create_table_mapping(db_pool, db_table_name):
+    meta = MetaData(db_pool)
+    tbl = Table(db_table_name, meta, autoload=True, autoload_with=db_pool)
     return tbl
+# endregion
 
 
+# region integration utilities
+def fnc_target(event, context):
+    if not running_locally:
+        pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
+    else:
+        pubsub_msg = json.loads(event["data"])
+
+    if "is_host" not in pubsub_msg or pubsub_msg["is_host"] is None:
+        raise RuntimeError('message is missing required field "is_host"!')
+
+    postgres_change_status(pubsub_msg)
+# endregion
+
+
+# region data mutation services
 def change_host_status(matches_id, target_status):
-    tbl = create_matches_table_mapping()
+    tbl_hosts = create_table_mapping(db_pool=db, db_table_name=os.environ["HOSTS_TABLE_NAME"])
 
     upd = (
-        tbl.update()
-        .where(tbl.c.db_matches_id == matches_id)
-        .where(tbl.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
+        tbl_hosts.update()
+        .where(tbl_hosts.c.db_matches_id == matches_id)
+        .where(tbl_hosts.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
         .values(fnc_host_status=target_status)
     )
 
@@ -119,29 +135,17 @@ def change_host_status(matches_id, target_status):
 
 
 def change_guest_status(matches_id, target_status):
-    tbl = create_matches_table_mapping()
+    tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
 
     upd = (
-        tbl.update()
-        .where(tbl.c.db_matches_id == matches_id)
-        .where(tbl.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
+        tbl_guests.update()
+        .where(tbl_guests.c.db_matches_id == matches_id)
+        .where(tbl_guests.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
         .values(fnc_guest_status=target_status)
     )
 
     with db.connect() as conn:
         conn.execute(upd)
-
-
-def fnc_target(event, context):
-    if not running_locally:
-        pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
-    else:
-        pubsub_msg = json.loads(event["data"])
-
-    if not "is_host" in pubsub_msg or pubsub_msg["is_host"] == None:
-        raise RuntimeError('message is missing required field "is_host"!')
-
-    postgres_change_status(pubsub_msg)
 
 
 def postgres_change_status(pubsub_msg):
@@ -154,3 +158,5 @@ def postgres_change_status(pubsub_msg):
             change_host_status(matches_id, target_status)
         else:
             change_guest_status(matches_id, target_status)
+
+# endregion

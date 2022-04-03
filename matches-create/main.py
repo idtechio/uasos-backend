@@ -12,8 +12,6 @@ from enum import Enum
 from sqlalchemy import create_engine
 from sqlalchemy import Table
 from sqlalchemy import MetaData
-from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import VARCHAR
 
 from google.cloud import secretmanager
 from dotenv import load_dotenv
@@ -26,6 +24,7 @@ DURATION_CATEGORIES = ["less_than_1_week", "1_week", "2_3_weeks", "month", "long
 MATCH_TIMEOUT_HOURS = None
 
 
+# region configuration context
 def query_configuration_context(secret_id):
     client = secretmanager.SecretManagerServiceClient()
     secret_name = (
@@ -46,9 +45,10 @@ if not running_locally:
 else:
     print("Running locally")
     load_dotenv()
+# endregion
 
 
-# region Database
+# region database connectivity
 def create_db_engine():
     db_config = {
         "drivername": "postgresql+pg8000",
@@ -98,8 +98,6 @@ class HostsGuestsStatus(Enum):
     FNC_BEING_PROCESSED = "075"
     FNC_MATCHED = "085"
     MATCH_ACCEPTED = "095"
-
-
 # endregion
 
 
@@ -275,79 +273,15 @@ def find_matches(hosts, guests, recent_matches, rid_pairs):
 
 
 # region Database data models
-def create_matches_table_mapping():
-    table_name = os.environ["MATCHES_TABLE_NAME"]
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_matches_id", VARCHAR),
-        Column("db_ts_matched", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("fnc_hosts_id", VARCHAR),
-        Column("fnc_guests_id", VARCHAR),
-        Column("fnc_host_status", VARCHAR),
-        Column("fnc_guest_status", VARCHAR),
-    )
+def create_table_mapping(db_pool, db_table_name):
+    meta = MetaData(db_pool)
+    tbl = Table(db_table_name, meta, autoload=True, autoload_with=db_pool)
 
     return tbl
-
-
-def create_guests_table_mapping():
-    table_name = os.environ["GUESTS_TABLE_NAME"]
-    # table_name = 'guests'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_guests_id", VARCHAR),
-        Column("city", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("db_ts_registered", VARCHAR),
-        Column("country", VARCHAR),
-        Column("acceptable_shelter_types", VARCHAR),
-        Column("beds", VARCHAR),
-        Column("group_relation", VARCHAR),
-        Column("is_pregnant", VARCHAR),
-        Column("is_with_disability", VARCHAR),
-        Column("is_with_animal", VARCHAR),
-        Column("is_with_elderly", VARCHAR),
-        Column("is_ukrainian_nationality", VARCHAR),
-        Column("duration_category", VARCHAR),
-    )
-
-    return tbl
-
-
-def create_hosts_table_mapping():
-    table_name = os.environ["HOSTS_TABLE_NAME"]
-    # table_name = 'hosts'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_hosts_id", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("db_ts_registered", VARCHAR),
-        Column("closest_city", VARCHAR),
-        Column("country", VARCHAR),
-        Column("shelter_type", VARCHAR),
-        Column("beds", VARCHAR),
-        Column("acceptable_group_relations", VARCHAR),
-        Column("ok_for_pregnant", VARCHAR),
-        Column("ok_for_disabilities", VARCHAR),
-        Column("ok_for_animals", VARCHAR),
-        Column("ok_for_elderly", VARCHAR),
-        Column("ok_for_any_nationality", VARCHAR),
-        Column("duration_category", VARCHAR),
-    )
-
-    return tbl
-
-
 # endregion
 
-# region Utility functions
+
+# region utility functions
 def query_list(input_text):
     if type(input_text) != str:
         return []
@@ -378,18 +312,16 @@ def default_value(value: str, default: str):
 
 def query_epoch_with_milliseconds():
     return int(time.time() * 1000)
-
-
 # endregion
 
 
 # region Database mutation functions
 def change_host_status(db_connection, db_hosts_id, target_status):
-    tbl = create_hosts_table_mapping()
+    tbl_hosts = create_table_mapping(db_pool=db, db_table_name=os.environ["HOSTS_TABLE_NAME"])
 
     upd = (
-        tbl.update()
-        .where(tbl.c.db_hosts_id == db_hosts_id)
+        tbl_hosts.update()
+        .where(tbl_hosts.c.db_hosts_id == db_hosts_id)
         .values(fnc_status=target_status)
     )
 
@@ -398,11 +330,11 @@ def change_host_status(db_connection, db_hosts_id, target_status):
 
 
 def change_guest_status(db_connection, db_guests_id, target_status):
-    tbl = create_guests_table_mapping()
+    tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
 
     upd = (
-        tbl.update()
-        .where(tbl.c.db_guests_id == db_guests_id)
+        tbl_guests.update()
+        .where(tbl_guests.c.db_guests_id == db_guests_id)
         .values(fnc_status=target_status)
     )
 
@@ -433,9 +365,9 @@ def create_matching(pubsub_msg):
     global MATCH_TIMEOUT_HOURS
     MATCH_TIMEOUT_HOURS = configuration_context["MATCH_TIMEOUT_HOURS"]
 
-    tbl_matches = create_matches_table_mapping()
-    tbl_guests = create_guests_table_mapping()
-    tbl_hosts = create_hosts_table_mapping()
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
+    tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
+    tbl_hosts = create_table_mapping(db_pool=db, db_table_name=os.environ["HOSTS_TABLE_NAME"])
 
     # region Preparing hosts dataset
     print("Preparing hosts dataset")
