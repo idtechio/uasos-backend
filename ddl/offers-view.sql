@@ -46,7 +46,7 @@ SELECT
     END AS match_status
 
     ,g.db_guests_id AS guest_id
-    ,ag.name AS guest_name
+    ,CASE WHEN m.fnc_status='075' THEN ag.name ELSE '' END AS guest_name
     ,g.city AS guest_city
     ,g.country AS guest_country
     ,CASE WHEN m.fnc_status='075' THEN ag.phone_num ELSE '' END AS guest_phone_num
