@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS guests (
     ,db_ts_registered VARCHAR(13) DEFAULT FLOOR(EXTRACT(epoch FROM NOW())*1000)
     ,fnc_accounts_id VARCHAR NOT NULL
     ,fnc_status VARCHAR
+    ,name VARCHAR
     ,country VARCHAR
     ,phone_num VARCHAR
     ,email VARCHAR
