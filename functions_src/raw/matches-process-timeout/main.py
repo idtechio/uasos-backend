@@ -17,6 +17,7 @@ from google.cloud import secretmanager
 from dotenv import load_dotenv
 
 
+# region configuration context
 def query_configuration_context(secret_id):
     client = secretmanager.SecretManagerServiceClient()
     secret_name = (
@@ -37,9 +38,10 @@ if not running_locally:
 else:
     print(f"Running locally")
     load_dotenv()
+# endregion
 
 
-# region Database
+# region database connectivity
 def create_db_engine():
     db_config = {
         "drivername": "postgresql+pg8000",
@@ -95,81 +97,15 @@ class HostsGuestsStatus(Enum):
 
 
 # region Database data models
-def create_matches_table_mapping():
-    table_name = os.environ["MATCHES_TABLE_NAME"]
-    # table_name = 'matches'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_matches_id", VARCHAR),
-        Column("fnc_ts_matched", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("fnc_hosts_id", VARCHAR),
-        Column("fnc_guests_id", VARCHAR),
-        Column("fnc_host_status", VARCHAR),
-        Column("fnc_guest_status", VARCHAR),
-    )
+def create_table_mapping(db_pool, db_table_name):
+    meta = MetaData(db_pool)
+    tbl = Table(db_table_name, meta, autoload=True, autoload_with=db_pool)
 
     return tbl
-
-
-def create_guests_table_mapping():
-    table_name = os.environ["GUESTS_TABLE_NAME"]
-    # table_name = 'guests'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_guests_id", VARCHAR),
-        Column("name", VARCHAR),
-        Column("city", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("country", VARCHAR),
-        Column("acceptable_shelter_types", VARCHAR),
-        Column("beds", VARCHAR),
-        Column("group_relation", VARCHAR),
-        Column("is_pregnant", VARCHAR),
-        Column("is_with_disability", VARCHAR),
-        Column("is_with_animal", VARCHAR),
-        Column("is_with_elderly", VARCHAR),
-        Column("is_ukrainian_nationality", VARCHAR),
-        Column("duration_category", VARCHAR),
-    )
-
-    return tbl
-
-
-def create_hosts_table_mapping():
-    table_name = os.environ["HOSTS_TABLE_NAME"]
-    # table_name = 'hosts'
-    meta = MetaData(db)
-    tbl = Table(
-        table_name,
-        meta,
-        Column("db_hosts_id", VARCHAR),
-        Column("name", VARCHAR),
-        Column("fnc_status", VARCHAR),
-        Column("db_ts_registered", VARCHAR),
-        Column("city", VARCHAR),
-        Column("country", VARCHAR),
-        Column("shelter_type", VARCHAR),
-        Column("beds", VARCHAR),
-        Column("acceptable_group_relations", VARCHAR),
-        Column("ok_for_pregnant", VARCHAR),
-        Column("ok_for_disabilities", VARCHAR),
-        Column("ok_for_animals", VARCHAR),
-        Column("ok_for_elderly", VARCHAR),
-        Column("ok_for_any_nationality", VARCHAR),
-        Column("duration_category", VARCHAR),
-    )
-
-    return tbl
-
-
 # endregion
 
 
+# region utility functions
 def check_expired_in_hours(str_epoch, timeout_hours):
     now = int(time.time() * 1000)
 
@@ -179,8 +115,10 @@ def check_expired_in_hours(str_epoch, timeout_hours):
     delta_in_hours = int(delta / 1000 / 3600)
 
     return delta_in_hours > int(timeout_hours)
+# endregion
 
 
+# region integration utilities
 def fnc_target(event, context):
     if not running_locally:
         pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
@@ -188,12 +126,14 @@ def fnc_target(event, context):
         pubsub_msg = json.loads(event["data"])
 
     postgres_process_timeout(pubsub_msg)
+# endregion
 
 
+# region data mutation services
 def postgres_process_timeout(pubsub_msg):
-    tbl_matches = create_matches_table_mapping()
-    tbl_guests = create_guests_table_mapping()
-    tbl_hosts = create_hosts_table_mapping()
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
+    tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
+    tbl_hosts = create_table_mapping(db_pool=db, db_table_name=os.environ["HOSTS_TABLE_NAME"])
 
     sel_matches = (
         tbl_matches.select()
@@ -237,3 +177,5 @@ def postgres_process_timeout(pubsub_msg):
                         .values(fnc_status=HostsGuestsStatus.MOD_ACCEPTED)
                     )
                     conn.execute(change_guests_status)
+
+# endregion
