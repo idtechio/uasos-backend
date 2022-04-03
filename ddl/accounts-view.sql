@@ -3,6 +3,7 @@ DROP VIEW IF EXISTS accounts_info;
 CREATE OR REPLACE VIEW accounts_info AS
 SELECT
     db_accounts_id
+    ,fnc_status
     ,uid
     ,name
     ,phone_num
