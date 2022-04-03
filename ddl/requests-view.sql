@@ -17,8 +17,8 @@ SELECT
     END AS guest_status
     ,g.city
     ,g.country
-    ,coalesce(g.phone_num, a.phone_num) AS phone_num
-    ,coalesce(g.email, a.email) AS email
+    ,a.phone_num AS phone_num
+    ,a.email AS email
     ,g.beds
     ,g.acceptable_shelter_types
     ,g.group_relation
@@ -42,8 +42,8 @@ SELECT
     ,ah.name AS host_name
     ,h.city AS host_city
     ,h.country AS host_country
-    ,CASE WHEN m.fnc_status='075' THEN coalesce(h.phone_num, ah.phone_num) ELSE '' END AS host_phone_num
-    ,CASE WHEN m.fnc_status='075' THEN coalesce(h.email, ah.email) ELSE '' END AS host_email
+    ,CASE WHEN m.fnc_status='075' THEN ah.phone_num ELSE '' END AS host_phone_num
+    ,CASE WHEN m.fnc_status='075' THEN ah.email ELSE '' END AS host_email
     ,CASE
         WHEN h.fnc_status='045' THEN 'rejected'
         WHEN h.fnc_status='065' THEN 'accepted'
