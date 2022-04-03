@@ -28,6 +28,16 @@ SELECT
     ,g.is_with_elderly
     ,g.is_ukrainian_nationality
     ,g.duration_category
+
+    ,CASE
+        WHEN m.db_matches_id IS NULL THEN 'looking_for_match'
+        WHEN m.db_matches_id IS NOT NULL AND m.fnc_status='035' THEN 'inactive'
+        WHEN m.db_matches_id IS NOT NULL AND m.fnc_status='075' THEN 'confirmed'
+        WHEN m.db_matches_id IS NOT NULL AND (m.fnc_host_status='045' OR m.fnc_guest_status='045') THEN 'rejected'
+        WHEN m.db_matches_id IS NOT NULL AND (m.fnc_host_status='075' OR m.fnc_guest_status='075') THEN 'being_confirmed'
+        WHEN m.db_matches_id IS NOT NULL AND m.fnc_host_status NOT IN ('045', '075') AND m.fnc_guest_status NOT IN ('045', '075') THEN 'found_a_match'
+        ELSE 'looking_for_match'
+    END AS type
     
     ,m.db_matches_id AS match_id
     ,CASE
@@ -64,7 +74,7 @@ SELECT
     ,h.transport_included AS host_transport_included
 FROM guests g
 JOIN accounts a ON a.db_accounts_id = g.fnc_accounts_id
-LEFT JOIN matches m ON m.fnc_guests_id = g.db_guests_id
+LEFT JOIN matches m ON m.fnc_guests_id = g.db_guests_id AND m.fnc_status NOT IN ('035', '045')
 LEFT JOIN hosts h ON h.db_hosts_id = m.fnc_hosts_id
 LEFT JOIN accounts ah ON ah.db_accounts_id = h.fnc_accounts_id
 WHERE g.fnc_status != '035';
