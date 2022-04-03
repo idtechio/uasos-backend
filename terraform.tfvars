@@ -84,3 +84,9 @@ gcf_hosts-update_pubsub_topic_name = "hosts-update"
 
 gcf_guests-update_name = "guests-update"
 gcf_guests-update_pubsub_topic_name = "guests-update"
+
+gcf_hosts-delete_name = "hosts-delete"
+gcf_hosts-delete_pubsub_topic_name = "hosts-delete"
+
+gcf_guests-delete_name = "guests-delete"
+gcf_guests-delete_pubsub_topic_name = "guests-delete"
