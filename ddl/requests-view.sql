@@ -7,6 +7,7 @@ SELECT
 
     ,g.db_guests_id AS guest_id
     ,CASE
+        WHEN g.fnc_status='035' THEN 'deleted'
         WHEN g.fnc_status='045' THEN 'rejected'
         WHEN g.fnc_status='065' THEN 'accepted'
         WHEN g.fnc_status='075' THEN 'being_processed'
@@ -65,4 +66,5 @@ FROM guests g
 JOIN accounts a ON a.db_accounts_id = g.fnc_accounts_id
 LEFT JOIN matches m ON m.fnc_guests_id = g.db_guests_id
 LEFT JOIN hosts h ON h.db_hosts_id = m.fnc_hosts_id
-LEFT JOIN accounts ah ON ah.db_accounts_id = h.fnc_accounts_id;
+LEFT JOIN accounts ah ON ah.db_accounts_id = h.fnc_accounts_id
+WHERE g.fnc_status != '035';
