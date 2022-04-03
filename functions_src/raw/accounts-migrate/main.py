@@ -143,7 +143,7 @@ def update_hosts_with_accounts(db_pool):
                     upd_hosts = (
                         tbl_hosts.update()
                             .where(tbl_hosts.c.db_hosts_id == host['db_hosts_id'])
-                            .values(fnc_accounts_id=account['db_accounts_id'])
+                            .values(fnc_accounts_id=account['db_accounts_id'], fnc_status=AccountsStatus.MOD_ACCEPTED)
                     )
 
                     hosts_update_result = conn.execute(upd_hosts)
@@ -188,7 +188,7 @@ def update_guests_with_accounts(db_pool):
                     upd_guests = (
                         tbl_guests.update()
                             .where(tbl_guests.c.db_guests_id == guest['db_guests_id'])
-                            .values(fnc_accounts_id=account['db_accounts_id'])
+                            .values(fnc_accounts_id=account['db_accounts_id'], fnc_status=AccountsStatus.MOD_ACCEPTED)
                     )
 
                     guests_update_result = conn.execute(upd_guests)
