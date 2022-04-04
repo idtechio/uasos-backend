@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS guests (
      db_guests_id VARCHAR DEFAULT uuid_generate_v1mc() NOT NULL PRIMARY KEY	
     ,db_ts_registered VARCHAR(13) DEFAULT FLOOR(EXTRACT(epoch FROM NOW())*1000)
-    ,fnc_accounts_id VARCHAR NOT NULL
+    ,fnc_accounts_id VARCHAR
     ,fnc_status VARCHAR
     ,name VARCHAR
     ,country VARCHAR
