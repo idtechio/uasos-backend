@@ -63,3 +63,14 @@ resource "google_cloud_scheduler_job" "gcf_refresh_beds_stats_trigger" {
     data       = base64encode("{}")
   }
 }
+
+resource "google_cloud_scheduler_job" "gcf_accounts-migrate_trigger" {
+  name        = "gcf_accounts-migrate_trigger"
+  description = "gcf_accounts-migrate_trigger"
+  schedule    = "* * * * *" # every minute
+
+  pubsub_target {
+    topic_name = module.gcf_accounts-migrate.pubsub_topic_id
+    data       = base64encode("{}")
+  }
+}
