@@ -121,12 +121,12 @@ def fnc_target(event, context):
 
 # region data mutation services
 def change_host_status(matches_id, target_status):
-    tbl_hosts = create_table_mapping(db_pool=db, db_table_name=os.environ["HOSTS_TABLE_NAME"])
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
 
     upd = (
-        tbl_hosts.update()
-        .where(tbl_hosts.c.db_matches_id == matches_id)
-        .where(tbl_hosts.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
+        tbl_matches.update()
+        .where(tbl_matches.c.db_matches_id == matches_id)
+        .where(tbl_matches.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
         .values(fnc_host_status=target_status)
     )
 
@@ -135,12 +135,12 @@ def change_host_status(matches_id, target_status):
 
 
 def change_guest_status(matches_id, target_status):
-    tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
 
     upd = (
-        tbl_guests.update()
-        .where(tbl_guests.c.db_matches_id == matches_id)
-        .where(tbl_guests.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
+        tbl_matches.update()
+        .where(tbl_matches.c.db_matches_id == matches_id)
+        .where(tbl_matches.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
         .values(fnc_guest_status=target_status)
     )
 
