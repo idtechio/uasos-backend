@@ -143,12 +143,20 @@ def update_hosts_with_accounts(db_pool):
                     upd_hosts = (
                         tbl_hosts.update()
                             .where(tbl_hosts.c.db_hosts_id == host['db_hosts_id'])
-                            .values(fnc_accounts_id=account['db_accounts_id'], fnc_status=AccountsStatus.MOD_ACCEPTED)
+                            .values(fnc_accounts_id=account['db_accounts_id'])
                     )
 
                     hosts_update_result = conn.execute(upd_hosts)
 
-                    print(f"assigned db_account_id={account['db_accounts_id']} host={host['db_hosts_id']} with result={hosts_update_result}")
+                    upd_accounts = (
+                        tbl_accounts.update()
+                            .where(tbl_accounts.c.db_accounts_id == account['db_accounts_id'])
+                            .values(fnc_status=AccountsStatus.MOD_ACCEPTED)
+                    )
+
+                    accounts_update_result = conn.execute(upd_accounts)
+
+                    print(f"assigned db_account_id={account['db_accounts_id']} host={host['db_hosts_id']} with host result={hosts_update_result} and account result={accounts_update_result}")
 
 
 def update_guests_with_accounts(db_pool):
@@ -188,12 +196,20 @@ def update_guests_with_accounts(db_pool):
                     upd_guests = (
                         tbl_guests.update()
                             .where(tbl_guests.c.db_guests_id == guest['db_guests_id'])
-                            .values(fnc_accounts_id=account['db_accounts_id'], fnc_status=AccountsStatus.MOD_ACCEPTED)
+                            .values(fnc_accounts_id=account['db_accounts_id'])
                     )
 
                     guests_update_result = conn.execute(upd_guests)
 
-                    print(f"assigned db_account_id={account['db_accounts_id']} guest={guest['db_guests_id']} with result={guests_update_result}")
+                    upd_accounts = (
+                        tbl_accounts.update()
+                            .where(tbl_accounts.c.db_accounts_id == account['db_accounts_id'])
+                            .values(fnc_status=AccountsStatus.MOD_ACCEPTED)
+                    )
+
+                    accounts_update_result = conn.execute(upd_accounts)
+
+                    print(f"assigned db_account_id={account['db_accounts_id']} guest={guest['db_guests_id']} with guest result={guests_update_result} and account result={accounts_update_result}")
 
 
 def accounts_migrate(db_pool, pubsub_msg):
