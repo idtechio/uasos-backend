@@ -132,7 +132,7 @@ def update_hosts_with_accounts(db_pool):
                         and_(
                             tbl_hosts.c.fnc_accounts_id == sqlalchemy.null(),
                             tbl_hosts.c.email == account['email'],
-                            tbl_hosts.c.phone_num == account['phone_num'],
+                            # tbl_hosts.c.phone_num == account['phone_num'],
                         )
                     )
                 )
@@ -177,7 +177,7 @@ def update_guests_with_accounts(db_pool):
                         and_(
                             tbl_guests.c.fnc_accounts_id == sqlalchemy.null(),
                             tbl_guests.c.email == account['email'],
-                            tbl_guests.c.phone_num == account['phone_num'],
+                            # tbl_guests.c.phone_num == account['phone_num'],
                         )
                     )
                 )
