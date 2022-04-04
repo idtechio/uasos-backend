@@ -254,7 +254,7 @@ def create_offering_notifications():
                 #     tbl_guests.c.db_guests_id == match["fnc_guests_id"]
                 # ) #FIXME
                 sel_guests = sqlalchemy.text(
-                    f"SELECT gue.*, acc.phone_num, acc.preferred_lang FROM guests gue JOIN accounts acc ON gue.fnc_accounts_id = acc.db_accounts_id WHERE gue.db_guests_id = '{match['fnc_guests_id']}';"
+                    f"SELECT coalesce(acc.phone_num, gue.phone_num) as phone_num, coalesce(acc.email, gue.email) as email, coalesce(acc.name, gue.name) as name, coalesce(acc.preferred_lang, 'uk') as preferred_lang FROM guests gue LEFT JOIN accounts acc ON gue.fnc_accounts_id = acc.db_accounts_id WHERE gue.db_guests_id = '{match['fnc_guests_id']}';"
                 )
                 guest_rows = conn.execute(sel_guests)
 
@@ -263,7 +263,7 @@ def create_offering_notifications():
                 #     tbl_guests.c.db_guests_id == match["fnc_hosts_id"]
                 # )
                 sel_hosts = sqlalchemy.text(
-                    f"SELECT hos.*, acc.phone_num, acc.preferred_lang FROM hosts hos JOIN accounts acc ON hos.fnc_accounts_id = acc.db_accounts_id WHERE hos.db_hosts_id = '{match['fnc_hosts_id']}';"
+                    f"SELECT coalesce(acc.phone_num, hos.phone_num) as phone_num, coalesce(acc.email, hos.email) as email, coalesce(acc.name, hos.name) as name, coalesce(acc.preferred_lang, 'pl') as preferred_lang FROM hosts hos LEFT JOIN accounts acc ON hos.fnc_accounts_id = acc.db_accounts_id WHERE hos.db_hosts_id = '{match['fnc_hosts_id']}';"
                 )
                 host_rows = conn.execute(sel_hosts)
 
