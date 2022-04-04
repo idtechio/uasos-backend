@@ -228,7 +228,7 @@ def create_payload_for_guest_get_match_template(matches_id, host_row, guest_row)
         "host_name": host_row["name"],
         "host_city": host_row["city"],
         "host_acctype": translate_shelter_type(host_row["shelter_type"], preferred_lang),
-        "host_stay_length": translate_duration_category(host_row["duration_category"], preferred_lang),
+        "host_stay_length": translate_duration_category(host_row["duration_category"]),
         "host_type": translate_shelter_type(host_row["shelter_type"], preferred_lang),
         "transport": translate_complication(host_row["transport_included"], preferred_lang),
         "adv_preg_allowed": translate_complication(host_row["ok_for_pregnant"], preferred_lang),
@@ -387,15 +387,21 @@ def create_offering_notifications():
             result = conn.execute(sel_matches)
 
             for match in result:
-                guests_join_accounts = join(tbl_guests, tbl_accounts, tbl_guests.c.fnc_accounts_id == tbl_accounts.c.db_accounts_id)
-                sel_guests = select(tbl_guests, tbl_accounts).select_from(guests_join_accounts).where(
-                    tbl_guests.c.db_guests_id == match["fnc_guests_id"]
+                # guests_join_accounts = join(tbl_guests, tbl_accounts, tbl_guests.c.fnc_accounts_id == tbl_accounts.c.db_accounts_id)
+                # sel_guests2 = select(tbl_guests, tbl_accounts).select_from(guests_join_accounts).where(
+                #     tbl_guests.c.db_guests_id == match["fnc_guests_id"]
+                # ) #FIXME
+                sel_guests = sqlalchemy.text(
+                    f"SELECT gue.*, acc.phone_num, acc.preferred_lang FROM guests gue JOIN accounts acc ON gue.fnc_accounts_id = acc.db_accounts_id WHERE gue.db_guests_id = '{match['fnc_guests_id']}';"
                 )
-                guest_rows = conn.execute(sel_guests)
+                guest_rows = conn.execute(sel_guests) 
 
-                hosts_join_accounts = join(tbl_hosts, tbl_accounts, tbl_hosts.c.fnc_accounts_id == tbl_accounts.c.db_accounts_id)
-                sel_hosts = select(tbl_hosts, tbl_accounts).select_from(hosts_join_accounts).where(
-                    tbl_guests.c.db_guests_id == match["fnc_hosts_id"]
+                # hosts_join_accounts = join(tbl_hosts, tbl_accounts, tbl_hosts.c.fnc_accounts_id == tbl_accounts.c.db_accounts_id)
+                # sel_hosts = select(tbl_hosts, tbl_accounts).select_from(hosts_join_accounts).where(
+                #     tbl_guests.c.db_guests_id == match["fnc_hosts_id"]
+                # )
+                sel_hosts = sqlalchemy.text(
+                    f"SELECT hos.*, acc.phone_num, acc.preferred_lang FROM hosts hos JOIN accounts acc ON hos.fnc_accounts_id = acc.db_accounts_id WHERE hos.db_hosts_id = '{match['fnc_hosts_id']}';"
                 )
                 host_rows = conn.execute(sel_hosts)
 
