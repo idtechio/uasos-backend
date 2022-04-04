@@ -228,7 +228,7 @@ def create_payload_for_guest_get_match_template(matches_id, host_row, guest_row)
         "host_name": host_row["name"],
         "host_city": host_row["city"],
         "host_acctype": translate_shelter_type(host_row["shelter_type"], preferred_lang),
-        "host_stay_length": translate_duration_category(host_row["duration_category"], preferred_lang),
+        "host_stay_length": translate_duration_category(host_row["duration_category"]),
         "host_type": translate_shelter_type(host_row["shelter_type"], preferred_lang),
         "transport": translate_complication(host_row["transport_included"], preferred_lang),
         "adv_preg_allowed": translate_complication(host_row["ok_for_pregnant"], preferred_lang),
