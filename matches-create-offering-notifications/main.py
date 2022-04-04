@@ -392,7 +392,7 @@ def create_offering_notifications():
                 #     tbl_guests.c.db_guests_id == match["fnc_guests_id"]
                 # ) #FIXME
                 sel_guests = sqlalchemy.text(
-                    f"SELECT coalesce(acc.phone_num, gue.phone_num) as phone_num, coalesce(acc.email, gue.email) as email, coalesce(acc.name, gue.name) as name, coalesce(acc.preferred_lang, 'uk') as preferred_lang FROM guests gue LEFT JOIN accounts acc ON gue.fnc_accounts_id = acc.db_accounts_id WHERE gue.db_guests_id = '{match['fnc_guests_id']}';"
+                    f"SELECT gue.db_guests_id, gue.db_ts_registered, gue.fnc_accounts_id, gue.fnc_status, gue.country, gue.city, gue.acceptable_shelter_types, gue.beds, gue.group_relation, gue.is_pregnant, gue.is_with_disability, gue.is_with_animal, gue.is_with_elderly, gue.is_ukrainian_nationality, duration_category, coalesce(acc.phone_num, gue.phone_num) as phone_num, coalesce(acc.email, gue.email) as email, coalesce(acc.name, gue.name) as name, coalesce(acc.preferred_lang, 'uk') as preferred_lang FROM guests gue LEFT JOIN accounts acc ON gue.fnc_accounts_id = acc.db_accounts_id WHERE gue.db_guests_id = '{match['fnc_guests_id']}';"
                 )
                 guest_rows = conn.execute(sel_guests) 
 
@@ -401,7 +401,7 @@ def create_offering_notifications():
                 #     tbl_guests.c.db_guests_id == match["fnc_hosts_id"]
                 # )
                 sel_hosts = sqlalchemy.text(
-                    f"SELECT coalesce(acc.phone_num, hos.phone_num) as phone_num, coalesce(acc.email, hos.email) as email, coalesce(acc.name, hos.name) as name, coalesce(acc.preferred_lang, 'pl') as preferred_lang FROM hosts hos LEFT JOIN accounts acc ON hos.fnc_accounts_id = acc.db_accounts_id WHERE hos.db_hosts_id = '{match['fnc_hosts_id']}';"
+                    f"SELECT hos.db_hosts_id, hos.db_ts_registered, hos.fnc_accounts_id, hos.fnc_status, hos.country, hos.city, hos.closest_city, hos.zipcode, hos.street, hos.building_no, hos.appartment_no, hos.shelter_type, hos.beds, hos.acceptable_group_relations, hos.ok_for_pregnant, hos.ok_for_disabilities, hos.ok_for_animals, hos.ok_for_elderly, hos.ok_for_any_nationality, hos.duration_category, hos.transport_included, can_be_verified, coalesce(acc.phone_num, hos.phone_num) as phone_num, coalesce(acc.email, hos.email) as email, coalesce(acc.name, hos.name) as name, coalesce(acc.preferred_lang, 'pl') as preferred_lang FROM hosts hos LEFT JOIN accounts acc ON hos.fnc_accounts_id = acc.db_accounts_id WHERE hos.db_hosts_id = '{match['fnc_hosts_id']}';"
                 )
                 host_rows = conn.execute(sel_hosts)
 
