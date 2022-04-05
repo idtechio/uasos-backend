@@ -51,7 +51,7 @@ SELECT
     ,h.db_hosts_id AS host_id
     ,CASE WHEN m.fnc_status='075' THEN ah.name ELSE '' END AS host_name
     ,h.city AS host_city
-    ,h.closest_city AS closest_city
+    ,h.closest_city AS host_closest_city
     ,h.country AS host_country
     ,CASE WHEN m.fnc_status='075' THEN ah.phone_num ELSE '' END AS host_phone_num
     ,CASE WHEN m.fnc_status='075' THEN ah.email ELSE '' END AS host_email
