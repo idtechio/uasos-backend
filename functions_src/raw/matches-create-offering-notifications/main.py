@@ -307,15 +307,15 @@ def fnc_target(event, context):
 def translate_shelter_type(shelter_type, preferred_lang):
     shelter_type = shelter_type[1:-1]
     if shelter_type == "bed":
-        return i18n.t("staticValues.accommodationTypes..bed", locale=preferred_lang)
+        return i18n.t("staticValues.accommodationTypes.bed", locale=preferred_lang)
     elif shelter_type == "room":
-        return i18n.t("staticValues.accommodationTypes..room", locale=preferred_lang)
+        return i18n.t("staticValues.accommodationTypes.room", locale=preferred_lang)
     elif shelter_type == "flat":
-        return i18n.t("staticValues.accommodationTypes..flat", locale=preferred_lang)
+        return i18n.t("staticValues.accommodationTypes.flat", locale=preferred_lang)
     elif shelter_type == "house":
-        return i18n.t("staticValues.accommodationTypes..house", locale=preferred_lang)
+        return i18n.t("staticValues.accommodationTypes.house", locale=preferred_lang)
     elif shelter_type == "public_shared_space":
-        return i18n.t("staticValues.accommodationTypes..public_shared_space", locale=preferred_lang)
+        return i18n.t("staticValues.accommodationTypes.public_shared_space", locale=preferred_lang)
     else:
         return ""
 
