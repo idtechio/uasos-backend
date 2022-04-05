@@ -438,11 +438,16 @@ def create_matching(pubsub_msg):
     sel_guests = (
         tbl_guests.select()
         .limit(GUESTS_MATCHING_BATCH_SIZE)
-        .where(tbl_guests.c.fnc_status == HostsGuestsStatus.MOD_ACCEPTED)
+        .where(tbl_guests.c.fnc_status == HostsGuestsStatus.FNC_BEING_PROCESSED) # FIXME Using FNC_BEING_PROCESSED with update_guests_fnc_status_from_065_to_075_stmt as a temporary fix
     )
 
     with db.connect() as conn:
         with conn.begin():
+            print("Changing fnc_status to '075' in guests dataset") # FIXME Using update_guests_fnc_status_from_065_to_075_stmt as a temporary fix
+            update_guests_fnc_status_from_065_to_075_stmt = sqlalchemy.text(
+            f"UPDATE guests SET fnc_status = '075' WHERE fnc_status = '065';"
+            )
+            conn.execute(update_guests_fnc_status_from_065_to_075_stmt)
             result = conn.execute(sel_guests)
 
             for row in result:
@@ -481,12 +486,12 @@ def create_matching(pubsub_msg):
 
             if DEBUG:
                 print(guests)
-            print("Changing fnc_status to '075' in guests dataset")
+            # print("Changing fnc_status to '075' in guests dataset") # FIXME Optimize this code - using update_guests_fnc_status_from_065_to_075_stmt as a temporary fix
 
-            for guest in guests:
-                change_guest_status(
-                    conn, guest.rid, HostsGuestsStatus.FNC_BEING_PROCESSED
-                )
+            # for guest in guests:
+            #     change_guest_status(
+            #         conn, guest.rid, HostsGuestsStatus.FNC_BEING_PROCESSED
+            #     )
     # endregion
 
     # region Getting historical matches
