@@ -33,7 +33,10 @@ locals {
     "EMAIL_FROM",
     "SECRET",
     "NEXTAUTH_URL",
-    "POSTGRES_CREDENTIALS"
+    "POSTGRES_CREDENTIALS",
+    "DB_HOST",
+    "FIREBASE_CLIENT_EMAIL",
+    "FIREBASE_PRIVATE_KEY"
   ]
 
   gcf_secrets = [
