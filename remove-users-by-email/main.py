@@ -215,7 +215,7 @@ def unsubscribe_hosts(emails):
 
     with db.connect() as conn:
         with conn.begin():
-            sel_hosts = tbl_hosts.select().where(tbl_hosts.c.email.like(any_(emails)))
+            sel_hosts = tbl_hosts.select().where(tbl_hosts.c.email.ilike(any_(emails)))
             result = conn.execute(sel_hosts)
 
             for row in result:
@@ -229,7 +229,7 @@ def unsubscribe_guests(emails):
     with db.connect() as conn:
         with conn.begin():
             sel_guests = tbl_guests.select().where(
-                tbl_guests.c.email.like(any_(emails))
+                tbl_guests.c.email.ilike(any_(emails))
             )
             result = conn.execute(sel_guests)
 
