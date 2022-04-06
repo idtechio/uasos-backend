@@ -20,4 +20,5 @@ SELECT
         ELSE 'default'
     END AS phone_status
     ,preferred_lang
+    ,sms_notification
 FROM accounts;
