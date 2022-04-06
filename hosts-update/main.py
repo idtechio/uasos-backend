@@ -127,11 +127,17 @@ def postgres_insert(db_pool, pubsub_msg):
     if 'email' in pubsub_msg.keys():
         pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
 
+    db_hosts_id = pubsub_msg["db_hosts_id"]
+
+    pubsub_msg.pop('db_hosts_id')
+
     payload = nvl(pubsub_msg)
 
-    stmt = tbl_hosts.update()
+    stmt = tbl_hosts.update().where(tbl_hosts.c.db_hosts_id == db_hosts_id)
 
     with db.connect() as conn:
         with conn.begin():
-            conn.execute(stmt.values(**payload))
+            result = conn.execute(stmt.values(**payload))
+
+            print(f'updated db_hosts_id={db_hosts_id} with values={pubsub_msg} and result={result}')
 # endregion
