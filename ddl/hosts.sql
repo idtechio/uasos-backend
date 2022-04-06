@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS hosts (
     ,building_no VARCHAR
     ,appartment_no VARCHAR
     ,shelter_type VARCHAR
+    ,host_type VARCHAR
     ,beds INTEGER
     ,acceptable_group_relations VARCHAR
     ,ok_for_pregnant VARCHAR
