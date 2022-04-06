@@ -25,6 +25,7 @@ SELECT
     ,h.building_no
     ,h.appartment_no
     ,h.shelter_type
+    ,h.host_type
     ,h.beds
     ,h.acceptable_group_relations
     ,h.ok_for_pregnant
