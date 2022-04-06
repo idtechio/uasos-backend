@@ -15,6 +15,7 @@ SELECT
         WHEN h.fnc_status='095' THEN 'match_accepted'
         ELSE 'default'
     END AS host_status
+    ,h.db_ts_registered AS registered
     ,h.city
     ,h.country
     ,a.phone_num AS phone_num
@@ -25,6 +26,7 @@ SELECT
     ,h.building_no
     ,h.appartment_no
     ,h.shelter_type
+    ,h.host_type
     ,h.beds
     ,h.acceptable_group_relations
     ,h.ok_for_pregnant
