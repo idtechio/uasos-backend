@@ -15,6 +15,7 @@ SELECT
         WHEN g.fnc_status='095' THEN 'match_accepted'
         ELSE 'default'
     END AS guest_status
+    ,g.db_ts_registered AS registered
     ,g.city
     ,g.country
     ,a.phone_num AS phone_num
