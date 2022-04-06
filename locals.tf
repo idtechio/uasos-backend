@@ -36,7 +36,8 @@ locals {
     "POSTGRES_CREDENTIALS",
     "DB_HOST",
     "FIREBASE_CLIENT_EMAIL",
-    "FIREBASE_PRIVATE_KEY"
+    "FIREBASE_PRIVATE_KEY",
+    "NEXT_PUBLIC_FACEBOOK_PIXEL_ID"
   ]
 
   gcf_secrets = [
