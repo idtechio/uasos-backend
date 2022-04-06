@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     ,fnc_email_status VARCHAR
     ,fnc_msisdn_status VARCHAR
     ,preferred_lang VARCHAR
+    ,sms_notification VARCHAR
 );
 
 CREATE UNIQUE INDEX accounts_uid_uindex
