@@ -126,11 +126,17 @@ def postgres_update(db_pool, pubsub_msg):
     if 'email' in pubsub_msg.keys():
         pubsub_msg['email'] = lowercase_stripped(pubsub_msg['email'])
 
+    db_guests_id = pubsub_msg["db_guests_id"]
+
+    pubsub_msg.pop('db_guests_id')
+
     payload = nvl(pubsub_msg)
 
-    stmt = tbl_guests.update()
+    stmt = tbl_guests.update().where(tbl_guests.c.db_guests_id == db_guests_id)
 
     with db.connect() as conn:
         with conn.begin():
-            conn.execute(stmt.values(**payload))
+            result = conn.execute(stmt.values(**payload))
+
+            print(f'updated db_guests_id={db_guests_id} with values={payload} and result={result}')
 # endregion
