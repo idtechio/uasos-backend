@@ -155,7 +155,7 @@ def postgres_process_timeout(pubsub_msg):
                 print(f"processing MATCH {row['db_matches_id']}")
 
                 if check_expired_in_hours(
-                    row["fnc_ts_matched"], configuration_context["MATCH_TIMEOUT_HOURS"]
+                    row["db_ts_matched"], configuration_context["MATCH_TIMEOUT_HOURS"]
                 ):
                     change_matches_status = (
                         tbl_matches.update()
