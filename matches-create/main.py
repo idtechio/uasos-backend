@@ -12,6 +12,7 @@ from enum import Enum
 from sqlalchemy import create_engine
 from sqlalchemy import Table
 from sqlalchemy import MetaData
+from sqlalchemy import func
 
 from google.cloud import secretmanager
 from dotenv import load_dotenv
@@ -439,6 +440,7 @@ def create_matching(pubsub_msg):
         tbl_guests.select()
         .limit(GUESTS_MATCHING_BATCH_SIZE)
         .where(tbl_guests.c.fnc_status == HostsGuestsStatus.FNC_BEING_PROCESSED) # FIXME Using FNC_BEING_PROCESSED with update_guests_fnc_status_from_065_to_075_stmt as a temporary fix
+        .order_by(func.random())
     )
 
     with db.connect() as conn:
