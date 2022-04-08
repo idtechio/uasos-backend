@@ -116,18 +116,6 @@ def fnc_target(event, context):
     if "matches_id" not in pubsub_msg or pubsub_msg["matches_id"] is None:
         raise RuntimeError('message is missing required field "matches_id"!')
 
-    if "guests_to_return" not in pubsub_msg or pubsub_msg["guests_to_return"] is None:
-        raise RuntimeError('message is missing required field "guests_to_return"!')
-
-    if "guests_to_disable" not in pubsub_msg or pubsub_msg["guests_to_return"] is None:
-        raise RuntimeError('message is missing required field "guests_to_disable"!')
-
-    if "hosts_to_return" not in pubsub_msg or pubsub_msg["hosts_to_return"] is None:
-        raise RuntimeError('message is missing required field "hosts_to_return"!')
-
-    if "hosts_to_disable" not in pubsub_msg or pubsub_msg["hosts_to_return"] is None:
-        raise RuntimeError('message is missing required field "hosts_to_disable"!')
-
     postgres_split_match(pubsub_msg)
 
 
@@ -191,19 +179,18 @@ def matches_change_status(db_matches_id, target_status, conn):
 # region Main function
 def postgres_split_match(pubsub_msg):
     db_matches_id = pubsub_msg["db_matches_id"]
-    guests_to_disable = pubsub_msg["guests_to_disable"]
-    hosts_to_disable = pubsub_msg["hosts_to_disable"]
-    guests_to_return = pubsub_msg["guests_to_return"]
-    hosts_to_return = pubsub_msg["hosts_to_return"]
 
     print(f"processing MATCH {db_matches_id}")
 
     with db.connect() as conn:
         with conn.begin():
             matches_change_status(db_matches_id, MatchesStatus.MATCH_REJECTED, conn)
-
-            hosts_change_status(hosts_to_return, HostsGuestsStatus.MOD_ACCEPTED, conn)
-            hosts_change_status(hosts_to_disable, HostsGuestsStatus.FNC_DISABLED, conn)
-            guests_change_status(guests_to_return, HostsGuestsStatus.MOD_ACCEPTED, conn)
-            guests_change_status(guests_to_disable, HostsGuestsStatus.FNC_DISABLED, conn)
+            if "guests_to_disable" in pubsub_msg:
+                guests_change_status(pubsub_msg["guests_to_disable"], HostsGuestsStatus.FNC_DISABLED, conn)
+            if "hosts_to_disable" in pubsub_msg:
+                hosts_change_status(pubsub_msg["hosts_to_disable"], HostsGuestsStatus.FNC_DISABLED, conn)
+            if "guests_to_return" in pubsub_msg:
+                guests_change_status(pubsub_msg["guests_to_return"], HostsGuestsStatus.MOD_ACCEPTED, conn)
+            if "hosts_to_return" in pubsub_msg:
+                hosts_change_status(pubsub_msg["hosts_to_return"], HostsGuestsStatus.MOD_ACCEPTED, conn)
 # endregion
