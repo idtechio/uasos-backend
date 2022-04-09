@@ -353,7 +353,7 @@ def update_status_bulk(db_connection, tbl, id_col_name, ids, target_status):
     )
 
     db_connection.execute(upd)
-    print(f"Updated {tbl}.{id_col_name}. Status set to {target_status} for {len(ids)} rows.")
+    print(f"Updated {tbl.name}.{id_col_name}. Status set to {target_status} ({target_status.value}) for {len(ids)} rows.")
 
 # endregion
 
@@ -436,7 +436,6 @@ def create_matching(pubsub_msg):
 
             if DEBUG:
                 print(hosts)
-            print("Changing fnc_status to '075' in hosts dataset")
 
             hosts_rids_set = set(element.rid for element in hosts)
 
@@ -501,7 +500,6 @@ def create_matching(pubsub_msg):
 
             if DEBUG:
                 print(guests)
-            print("Changing fnc_status to '075' in guests dataset")
 
             guests_rids_set = set(element.rid for element in guests)
 
@@ -579,8 +577,6 @@ def create_matching(pubsub_msg):
 
             # region Update col fnc_status in tbl hosts
 
-            print('Updating col fnc_status in tbl hosts')
-
             matched_hosts_set = {host.rid for host, guest in matches}
             hosts_rids_set = set(element.rid for element in hosts)
             # Hosts with match 
@@ -609,8 +605,6 @@ def create_matching(pubsub_msg):
             # endregion
 
             # region Update col fnc_status in tbl guests
-
-            print('Updating col fnc_status in tbl guests')
 
             matched_guests_set = {guest.rid for host, guest in matches}
             guests_rids_set = set(element.rid for element in guests)
