@@ -46,6 +46,7 @@ if not running_locally:
 else:
     print("Running locally")
     load_dotenv()
+    configuration_context = json.loads(os.environ["SECRET_CONFIGURATION_CONTEXT"])
 # endregion
 
 
@@ -198,29 +199,29 @@ def evaluate_pair(host: HostListing, guest: GuestListing, recent_matches, rid_pa
 
     # -> Boosters for host and guest activity related to response rate for previous offers #FIXME Optimize execution (otherwise function invocations may time out)
     # Calculate activity score
-    # host_activity_boost = 0
-    # guest_activity_boost = 0
+    host_activity_boost = 0
+    guest_activity_boost = 0
 
-    # for row in recent_matches:
-    #     if row["fnc_hosts_id"] == host.rid and (
-    #         row["fnc_host_status"] == MatchesStatus.MATCH_ACCEPTED.value
-    #         or row["fnc_host_status"] == MatchesStatus.MATCH_REJECTED.value
-    #     ):
-    #         if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
-    #             host_activity_boost += 3
-    #         if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
-    #             host_activity_boost += 1
-    #     if row["fnc_guests_id"] == guest.rid and (
-    #         row["fnc_guest_status"] == MatchesStatus.MATCH_ACCEPTED.value
-    #         or row["fnc_guest_status"] == MatchesStatus.MATCH_REJECTED.value
-    #     ):
-    #         if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
-    #             guest_activity_boost += 3
-    #         if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
-    #             guest_activity_boost += 1
+    for row in recent_matches:
+        if row["fnc_hosts_id"] == host.rid and (
+            row["fnc_host_status"] == MatchesStatus.MATCH_ACCEPTED.value
+            or row["fnc_host_status"] == MatchesStatus.MATCH_REJECTED.value
+        ):
+            if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
+                host_activity_boost += 3
+            if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
+                host_activity_boost += 1
+        if row["fnc_guests_id"] == guest.rid and (
+            row["fnc_guest_status"] == MatchesStatus.MATCH_ACCEPTED.value
+            or row["fnc_guest_status"] == MatchesStatus.MATCH_REJECTED.value
+        ):
+            if row["fnc_status"] == MatchesStatus.MATCH_TIMEOUT.value:
+                guest_activity_boost += 3
+            if row["fnc_status"] == MatchesStatus.MATCH_REJECTED.value:
+                guest_activity_boost += 1
 
-    # score += 0.05 * float(min(6, host_activity_boost) / 6.0)
-    # score += 0.05 * float(min(6, guest_activity_boost) / 6.0)
+    score += 0.05 * float(min(6, host_activity_boost) / 6.0)
+    score += 0.05 * float(min(6, guest_activity_boost) / 6.0)
 
     # -> Boosters for recency of host registration
     host_listing_age = age_in_hours(host.registration_date)
@@ -343,6 +344,17 @@ def change_guest_status(db_connection, db_guests_id, target_status):
     db_connection.execute(upd)
 
 
+def update_status_bulk(db_connection, tbl, id_col_name, ids, target_status):
+
+    upd = (
+        tbl.update()
+        .values(fnc_status=target_status)
+        .where(tbl.c[id_col_name].in_(ids))
+    )
+
+    db_connection.execute(upd)
+    print(f"Updated {tbl.name}.{id_col_name}. Status set to {target_status} ({target_status.value}) for {len(ids)} rows.")
+
 # endregion
 
 
@@ -424,12 +436,17 @@ def create_matching(pubsub_msg):
 
             if DEBUG:
                 print(hosts)
-            print("Changing fnc_status to '075' in hosts dataset")
 
-            for host in hosts:
-                change_host_status(
-                    conn, host.rid, HostsGuestsStatus.FNC_BEING_PROCESSED
-                )
+            hosts_rids_set = set(element.rid for element in hosts)
+
+            update_status_bulk(
+                db_connection=conn,
+                tbl=tbl_hosts,
+                target_status=HostsGuestsStatus.FNC_BEING_PROCESSED,
+                id_col_name='db_hosts_id',
+                ids=hosts_rids_set,
+            )
+
     # endregion
 
     # region Preparing guests dataset
@@ -439,17 +456,12 @@ def create_matching(pubsub_msg):
     sel_guests = (
         tbl_guests.select()
         .limit(GUESTS_MATCHING_BATCH_SIZE)
-        .where(tbl_guests.c.fnc_status == HostsGuestsStatus.FNC_BEING_PROCESSED) # FIXME Using FNC_BEING_PROCESSED with update_guests_fnc_status_from_065_to_075_stmt as a temporary fix
+        .where(tbl_guests.c.fnc_status == HostsGuestsStatus.MOD_ACCEPTED)
         .order_by(func.random())
     )
 
     with db.connect() as conn:
         with conn.begin():
-            print("Changing fnc_status to '075' in guests dataset") # FIXME Using update_guests_fnc_status_from_065_to_075_stmt as a temporary fix
-            update_guests_fnc_status_from_065_to_075_stmt = sqlalchemy.text(
-            f"UPDATE guests SET fnc_status = '075' WHERE fnc_status = '065';"
-            )
-            conn.execute(update_guests_fnc_status_from_065_to_075_stmt)
             result = conn.execute(sel_guests)
 
             for row in result:
@@ -488,12 +500,17 @@ def create_matching(pubsub_msg):
 
             if DEBUG:
                 print(guests)
-            # print("Changing fnc_status to '075' in guests dataset") # FIXME Optimize this code - using update_guests_fnc_status_from_065_to_075_stmt as a temporary fix
 
-            # for guest in guests:
-            #     change_guest_status(
-            #         conn, guest.rid, HostsGuestsStatus.FNC_BEING_PROCESSED
-            #     )
+            guests_rids_set = set(element.rid for element in guests)
+
+            update_status_bulk(
+                db_connection=conn,
+                tbl=tbl_guests,
+                target_status=HostsGuestsStatus.FNC_BEING_PROCESSED,
+                id_col_name='db_guests_id',
+                ids=guests_rids_set,
+            )
+
     # endregion
 
     # region Getting historical matches
@@ -547,7 +564,7 @@ def create_matching(pubsub_msg):
                 # print(f"match (guest={guest.rid}, host={host.rid})")
 
                 ins_match = tbl_matches.insert().values(
-                    db_ts_matched=f"{query_epoch_with_milliseconds()}",
+                    # db_ts_matched=f"{query_epoch_with_milliseconds()}",
                     fnc_status=MatchesStatus.DEFAULT,
                     fnc_hosts_id=host.rid,
                     fnc_guests_id=guest.rid,
@@ -556,28 +573,65 @@ def create_matching(pubsub_msg):
                 )
 
                 conn.execute(ins_match)
+            print('Finished inserting matches')
 
-            matched_hosts = [host.rid for host, guest in matches]
-            matched_guests = [guest.rid for host, guest in matches]
+            # region Update col fnc_status in tbl hosts
 
-            for element in hosts:
-                if element.rid in matched_hosts:
-                    change_host_status(conn, element.rid, HostsGuestsStatus.FNC_MATCHED)
-                else:
-                    change_host_status(
-                        conn, element.rid, HostsGuestsStatus.MOD_ACCEPTED
-                    )
+            matched_hosts_set = {host.rid for host, guest in matches}
+            hosts_rids_set = set(element.rid for element in hosts)
+            # Hosts with match 
+            hosts_rids_set_matched_hosts_set_intersection = hosts_rids_set & matched_hosts_set #FIXME TBH we could probably use matched_hosts_set without this operation - no time to check, so i'm leaving it as is
+            # Hosts without a match
+            hosts_rids_set_matched_hosts_set_difference = hosts_rids_set - matched_hosts_set
+            
+            tbl_hosts = create_table_mapping(db_pool=db, db_table_name=os.environ["HOSTS_TABLE_NAME"])
 
-            for element in guests:
-                if element.rid in matched_guests:
-                    change_guest_status(
-                        conn, element.rid, HostsGuestsStatus.FNC_MATCHED
-                    )
-                else:
-                    change_guest_status(
-                        conn, element.rid, HostsGuestsStatus.MOD_ACCEPTED
-                    )
+            update_status_bulk(
+                db_connection=conn,
+                tbl=tbl_hosts,
+                target_status=HostsGuestsStatus.FNC_MATCHED,
+                id_col_name='db_hosts_id',
+                ids=hosts_rids_set_matched_hosts_set_intersection,
+            )
 
+            update_status_bulk(
+                db_connection=conn,
+                tbl=tbl_hosts,
+                target_status=HostsGuestsStatus.MOD_ACCEPTED,
+                id_col_name='db_hosts_id',
+                ids=hosts_rids_set_matched_hosts_set_difference,
+            )
+
+            # endregion
+
+            # region Update col fnc_status in tbl guests
+
+            matched_guests_set = {guest.rid for host, guest in matches}
+            guests_rids_set = set(element.rid for element in guests)
+            # Guests with match 
+            guests_rids_set_matched_guests_set_intersection = guests_rids_set & matched_guests_set #FIXME TBH we could probably use matched_guests_set without this operation - no time to check, so i'm leaving it as is
+            # Guests without a match
+            guests_rids_set_matched_guests_set_difference = guests_rids_set - matched_guests_set
+            
+            tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
+
+            update_status_bulk(
+                db_connection=conn,
+                tbl=tbl_guests,
+                target_status=HostsGuestsStatus.FNC_MATCHED,
+                id_col_name='db_guests_id',
+                ids=guests_rids_set_matched_guests_set_intersection,
+            )
+
+            update_status_bulk(
+                db_connection=conn,
+                tbl=tbl_guests,
+                target_status=HostsGuestsStatus.MOD_ACCEPTED,
+                id_col_name='db_guests_id',
+                ids=guests_rids_set_matched_guests_set_difference,
+            )
+
+            # endregion
 
 # endregion
 
