@@ -11,74 +11,16 @@ CREATE TABLE IF NOT EXISTS accounts (
     ,fnc_email_status VARCHAR
     ,fnc_msisdn_status VARCHAR
     ,preferred_lang VARCHAR
+    ,sms_notification VARCHAR
 );
 
 CREATE UNIQUE INDEX accounts_uid_uindex
     on accounts (uid);
 
-CREATE TABLE IF NOT EXISTS hosts (
-     db_hosts_id VARCHAR DEFAULT uuid_generate_v1mc() NOT NULL PRIMARY KEY	
-    ,db_ts_registered VARCHAR(13) DEFAULT FLOOR(EXTRACT(epoch FROM NOW())*1000)
-    ,fnc_accounts_id VARCHAR NOT NULL
-    ,fnc_status VARCHAR
-    ,country VARCHAR
-    ,phone_num VARCHAR
-    ,email VARCHAR
-    ,city VARCHAR
-    ,closest_city VARCHAR
-    ,zipcode VARCHAR
-    ,street VARCHAR
-    ,building_no VARCHAR
-    ,appartment_no VARCHAR
-    ,shelter_type VARCHAR
-    ,beds INTEGER
-    ,acceptable_group_relations VARCHAR
-    ,ok_for_pregnant VARCHAR
-    ,ok_for_disabilities VARCHAR
-    ,ok_for_animals VARCHAR
-    ,ok_for_elderly VARCHAR
-    ,ok_for_any_nationality VARCHAR
-    ,duration_category VARCHAR
-    ,transport_included VARCHAR
-    ,can_be_verified VARCHAR
-);
-
-CREATE TABLE IF NOT EXISTS guests (
-     db_guests_id VARCHAR DEFAULT uuid_generate_v1mc() NOT NULL PRIMARY KEY	
-    ,db_ts_registered VARCHAR(13) DEFAULT FLOOR(EXTRACT(epoch FROM NOW())*1000)
-    ,fnc_accounts_id VARCHAR NOT NULL
-    ,fnc_status VARCHAR
-    ,country VARCHAR
-    ,phone_num VARCHAR
-    ,email VARCHAR
-    ,city VARCHAR
-    ,acceptable_shelter_types VARCHAR
-    ,beds INTEGER
-    ,group_relation VARCHAR
-    ,is_pregnant VARCHAR
-    ,is_with_disability VARCHAR
-    ,is_with_animal VARCHAR
-    ,is_with_elderly VARCHAR
-    ,is_ukrainian_nationality VARCHAR
-    ,duration_category VARCHAR
-);
-
-CREATE TABLE IF NOT EXISTS matches (
-     db_matches_id VARCHAR DEFAULT uuid_generate_v1mc() NOT NULL PRIMARY KEY
-    ,db_ts_matched VARCHAR(13) DEFAULT FLOOR(EXTRACT(epoch FROM NOW())*1000)
-    ,fnc_status VARCHAR
-    ,fnc_hosts_id VARCHAR NOT NULL
-    ,fnc_guests_id VARCHAR NOT NULL
-    ,fnc_host_status VARCHAR
-    ,fnc_guest_status VARCHAR
-);
-
--- ALTER TABLE matches ADD CONSTRAINT fk_matches_guests_id FOREIGN KEY (fnc_guests_id) REFERENCES guests (db_guests_id);
--- ALTER TABLE matches ADD CONSTRAINT fk_matches_hosts_id FOREIGN KEY (fnc_hosts_id) REFERENCES hosts (db_hosts_id);
-
 CREATE OR REPLACE VIEW accounts_info AS
 SELECT
     db_accounts_id
+    ,fnc_status
     ,uid
     ,name
     ,phone_num
@@ -95,7 +37,74 @@ SELECT
         ELSE 'default'
     END AS phone_status
     ,preferred_lang
+    ,sms_notification
 FROM accounts;
+
+
+CREATE TABLE IF NOT EXISTS guests (
+     db_guests_id VARCHAR DEFAULT uuid_generate_v1mc() NOT NULL PRIMARY KEY	
+    ,db_ts_registered VARCHAR(13) DEFAULT FLOOR(EXTRACT(epoch FROM NOW())*1000)
+    ,fnc_accounts_id VARCHAR
+    ,fnc_status VARCHAR
+    ,name VARCHAR
+    ,country VARCHAR
+    ,phone_num VARCHAR
+    ,email VARCHAR
+    ,city VARCHAR
+    ,acceptable_shelter_types VARCHAR
+    ,beds INTEGER
+    ,group_relation VARCHAR
+    ,is_pregnant VARCHAR
+    ,is_with_disability VARCHAR
+    ,is_with_animal VARCHAR
+    ,is_with_elderly VARCHAR
+    ,is_ukrainian_nationality VARCHAR
+    ,duration_category VARCHAR
+);
+
+
+CREATE TABLE IF NOT EXISTS hosts (
+     db_hosts_id VARCHAR DEFAULT uuid_generate_v1mc() NOT NULL PRIMARY KEY	
+    ,db_ts_registered VARCHAR(13) DEFAULT FLOOR(EXTRACT(epoch FROM NOW())*1000)
+    ,fnc_accounts_id VARCHAR
+    ,fnc_status VARCHAR
+    ,name VARCHAR
+    ,country VARCHAR
+    ,phone_num VARCHAR
+    ,email VARCHAR
+    ,city VARCHAR
+    ,closest_city VARCHAR
+    ,zipcode VARCHAR
+    ,street VARCHAR
+    ,building_no VARCHAR
+    ,appartment_no VARCHAR
+    ,shelter_type VARCHAR
+    ,host_type VARCHAR
+    ,beds INTEGER
+    ,acceptable_group_relations VARCHAR
+    ,ok_for_pregnant VARCHAR
+    ,ok_for_disabilities VARCHAR
+    ,ok_for_animals VARCHAR
+    ,ok_for_elderly VARCHAR
+    ,ok_for_any_nationality VARCHAR
+    ,duration_category VARCHAR
+    ,transport_included VARCHAR
+    ,can_be_verified VARCHAR
+);
+
+
+CREATE TABLE IF NOT EXISTS matches (
+     db_matches_id VARCHAR DEFAULT uuid_generate_v1mc() NOT NULL PRIMARY KEY
+    ,db_ts_matched VARCHAR(13) DEFAULT FLOOR(EXTRACT(epoch FROM NOW())*1000)
+    ,fnc_status VARCHAR
+    ,fnc_hosts_id VARCHAR NOT NULL
+    ,fnc_guests_id VARCHAR NOT NULL
+    ,fnc_host_status VARCHAR
+    ,fnc_guest_status VARCHAR
+);
+
+-- ALTER TABLE matches ADD CONSTRAINT fk_matches_guests_id FOREIGN KEY (fnc_guests_id) REFERENCES guests (db_guests_id);
+-- ALTER TABLE matches ADD CONSTRAINT fk_matches_hosts_id FOREIGN KEY (fnc_hosts_id) REFERENCES hosts (db_hosts_id);
 
 CREATE OR REPLACE VIEW offers AS
 SELECT
@@ -104,6 +113,7 @@ SELECT
 
     ,h.db_hosts_id AS host_id
     ,CASE
+        WHEN h.fnc_status='035' THEN 'deleted'
         WHEN h.fnc_status='045' THEN 'rejected'
         WHEN h.fnc_status='065' THEN 'accepted'
         WHEN h.fnc_status='075' THEN 'being_processed'
@@ -111,16 +121,18 @@ SELECT
         WHEN h.fnc_status='095' THEN 'match_accepted'
         ELSE 'default'
     END AS host_status
+    ,h.db_ts_registered AS registered
     ,h.city
     ,h.country
-    ,coalesce(h.phone_num, a.phone_num) AS phone_num
-    ,coalesce(h.email, a.email) AS email
+    ,a.phone_num AS phone_num
+    ,a.email AS email
     ,h.closest_city
     ,h.zipcode
     ,h.street
     ,h.building_no
     ,h.appartment_no
     ,h.shelter_type
+    ,h.host_type
     ,h.beds
     ,h.acceptable_group_relations
     ,h.ok_for_pregnant
@@ -132,6 +144,16 @@ SELECT
     ,h.transport_included
     ,h.can_be_verified
 
+    ,CASE
+        WHEN m.db_matches_id IS NULL THEN 'looking_for_match'
+        WHEN m.db_matches_id IS NOT NULL AND m.fnc_status='035' THEN 'inactive'
+        WHEN m.db_matches_id IS NOT NULL AND m.fnc_status='075' THEN 'confirmed'
+        WHEN m.db_matches_id IS NOT NULL AND (m.fnc_host_status='045' OR m.fnc_guest_status='045') THEN 'rejected'
+        WHEN m.db_matches_id IS NOT NULL AND (m.fnc_host_status='075' OR m.fnc_guest_status='075') THEN 'being_confirmed'
+        WHEN m.db_matches_id IS NOT NULL AND m.fnc_host_status NOT IN ('045', '075') AND m.fnc_guest_status NOT IN ('045', '075') THEN 'found_a_match'
+        ELSE 'looking_for_match'
+    END AS type
+
     ,m.db_matches_id AS match_id
     ,CASE
         WHEN m.fnc_status='035' THEN 'timeout'
@@ -142,11 +164,11 @@ SELECT
     END AS match_status
 
     ,g.db_guests_id AS guest_id
-    ,ag.name AS guest_name
+    ,CASE WHEN m.fnc_status='075' THEN ag.name ELSE '' END AS guest_name
     ,g.city AS guest_city
     ,g.country AS guest_country
-    ,coalesce(g.phone_num, ag.phone_num) AS guest_phone_num
-    ,coalesce(g.email, ag.email) AS guest_email
+    ,CASE WHEN m.fnc_status='075' THEN ag.phone_num ELSE '' END AS guest_phone_num
+    ,CASE WHEN m.fnc_status='075' THEN ag.email ELSE '' END AS guest_email
     ,CASE
         WHEN g.fnc_status='045' THEN 'rejected'
         WHEN g.fnc_status='065' THEN 'accepted'
@@ -166,9 +188,10 @@ SELECT
     ,g.duration_category AS guest_duration_category
 FROM hosts h
 JOIN accounts a ON a.db_accounts_id = h.fnc_accounts_id
-LEFT JOIN matches m ON m.fnc_hosts_id = h.db_hosts_id
+LEFT JOIN matches m ON m.fnc_hosts_id = h.db_hosts_id AND m.fnc_status NOT IN ('035', '045')
 LEFT JOIN guests g ON g.db_guests_id = m.fnc_guests_id
-LEFT JOIN accounts ag ON ag.db_accounts_id = g.fnc_accounts_id;
+LEFT JOIN accounts ag ON ag.db_accounts_id = g.fnc_accounts_id
+WHERE h.fnc_status != '035';
 
 CREATE OR REPLACE VIEW requests AS
 SELECT
@@ -177,6 +200,7 @@ SELECT
 
     ,g.db_guests_id AS guest_id
     ,CASE
+        WHEN g.fnc_status='035' THEN 'deleted'
         WHEN g.fnc_status='045' THEN 'rejected'
         WHEN g.fnc_status='065' THEN 'accepted'
         WHEN g.fnc_status='075' THEN 'being_processed'
@@ -184,10 +208,11 @@ SELECT
         WHEN g.fnc_status='095' THEN 'match_accepted'
         ELSE 'default'
     END AS guest_status
+    ,g.db_ts_registered AS registered
     ,g.city
     ,g.country
-    ,coalesce(g.phone_num, a.phone_num) AS phone_num
-    ,coalesce(g.email, a.email) AS email
+    ,a.phone_num AS phone_num
+    ,a.email AS email
     ,g.beds
     ,g.acceptable_shelter_types
     ,g.group_relation
@@ -197,6 +222,16 @@ SELECT
     ,g.is_with_elderly
     ,g.is_ukrainian_nationality
     ,g.duration_category
+
+    ,CASE
+        WHEN m.db_matches_id IS NULL THEN 'looking_for_match'
+        WHEN m.db_matches_id IS NOT NULL AND m.fnc_status='035' THEN 'inactive'
+        WHEN m.db_matches_id IS NOT NULL AND m.fnc_status='075' THEN 'confirmed'
+        WHEN m.db_matches_id IS NOT NULL AND (m.fnc_host_status='045' OR m.fnc_guest_status='045') THEN 'rejected'
+        WHEN m.db_matches_id IS NOT NULL AND (m.fnc_host_status='075' OR m.fnc_guest_status='075') THEN 'being_confirmed'
+        WHEN m.db_matches_id IS NOT NULL AND m.fnc_host_status NOT IN ('045', '075') AND m.fnc_guest_status NOT IN ('045', '075') THEN 'found_a_match'
+        ELSE 'looking_for_match'
+    END AS type
     
     ,m.db_matches_id AS match_id
     ,CASE
@@ -208,11 +243,12 @@ SELECT
     END AS match_status
 
     ,h.db_hosts_id AS host_id
-    ,ah.name AS host_name
+    ,CASE WHEN m.fnc_status='075' THEN ah.name ELSE '' END AS host_name
     ,h.city AS host_city
+    ,h.closest_city AS host_closest_city
     ,h.country AS host_country
-    ,coalesce(h.phone_num, ah.phone_num) AS host_phone_num
-    ,coalesce(h.email, ah.email) AS host_email
+    ,CASE WHEN m.fnc_status='075' THEN ah.phone_num ELSE '' END AS host_phone_num
+    ,CASE WHEN m.fnc_status='075' THEN ah.email ELSE '' END AS host_email
     ,CASE
         WHEN h.fnc_status='045' THEN 'rejected'
         WHEN h.fnc_status='065' THEN 'accepted'
@@ -233,9 +269,10 @@ SELECT
     ,h.transport_included AS host_transport_included
 FROM guests g
 JOIN accounts a ON a.db_accounts_id = g.fnc_accounts_id
-LEFT JOIN matches m ON m.fnc_guests_id = g.db_guests_id
+LEFT JOIN matches m ON m.fnc_guests_id = g.db_guests_id AND m.fnc_status NOT IN ('035', '045')
 LEFT JOIN hosts h ON h.db_hosts_id = m.fnc_hosts_id
-LEFT JOIN accounts ah ON ah.db_accounts_id = h.fnc_accounts_id;
+LEFT JOIN accounts ah ON ah.db_accounts_id = h.fnc_accounts_id
+WHERE g.fnc_status != '035';
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS beds_statistics AS
 (
@@ -258,3 +295,70 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS beds_statistics AS
     SELECT m_beds, h_beds, g_beds FROM matched_beds, hosts_beds, guests_beds
 )
 WITH DATA;
+
+CREATE OR REPLACE VIEW v_accounts AS
+SELECT
+    to_timestamp(cast(db_ts_registered as bigint)/1000)::timestamp AS v_db_ts_registered
+    ,CASE
+		WHEN fnc_status='035' THEN '035:MOD_TO_MIGRATE'
+		WHEN fnc_status='045' THEN '045:MOD_REJECTED'
+		WHEN fnc_status='055' THEN '055:DEFAULT'
+		WHEN fnc_status='065' THEN '065:MOD_ACCEPTED'
+	END AS v_fnc_status
+    ,*
+FROM accounts;
+
+CREATE OR REPLACE VIEW v_guests AS
+SELECT
+    to_timestamp(cast(db_ts_registered as bigint)/1000)::timestamp AS v_db_ts_registered
+    ,CASE
+		WHEN fnc_status='035' THEN '035:MOD_DELETED'
+		WHEN fnc_status='045' THEN '045:DEFAULT'
+		WHEN fnc_status='065' THEN '065:MOD_ACCEPTED'
+		WHEN fnc_status='075' THEN '075:FNC_BEING_PROCESSED'
+		WHEN fnc_status='085' THEN '085:FNC_MATCHED'
+		WHEN fnc_status='095' THEN '095:MATCH_ACCEPTED'
+	END AS v_fnc_status
+    ,*
+FROM guests;
+
+CREATE OR REPLACE VIEW v_hosts AS
+SELECT
+    to_timestamp(cast(db_ts_registered as bigint)/1000)::timestamp AS v_db_ts_registered
+    ,CASE
+		WHEN fnc_status='035' THEN '035:MOD_DELETED'
+		WHEN fnc_status='045' THEN '045:DEFAULT'
+		WHEN fnc_status='065' THEN '065:MOD_ACCEPTED'
+		WHEN fnc_status='075' THEN '075:FNC_BEING_PROCESSED'
+		WHEN fnc_status='085' THEN '085:FNC_MATCHED'
+		WHEN fnc_status='095' THEN '095:MATCH_ACCEPTED'
+	END AS v_fnc_status
+    ,*
+FROM hosts;
+
+CREATE OR REPLACE VIEW v_matches AS
+SELECT
+    to_timestamp(cast(db_ts_matched as bigint)/1000)::timestamp AS v_db_ts_matched
+    ,CASE
+		WHEN fnc_status='035' THEN '035:MATCH_TIMEOUT'
+		WHEN fnc_status='045' THEN '045:MATCH_REJECTED'
+		WHEN fnc_status='055' THEN '055:DEFAULT'
+		WHEN fnc_status='065' THEN '065:FNC_AWAITING_RESPONSE'
+		WHEN fnc_status='075' THEN '075:MATCH_ACCEPTED'
+	END AS v_fnc_status
+    ,CASE
+		WHEN fnc_host_status='035' THEN '035:MATCH_TIMEOUT'
+		WHEN fnc_host_status='045' THEN '045:MATCH_REJECTED'
+		WHEN fnc_host_status='055' THEN '055:DEFAULT'
+		WHEN fnc_host_status='065' THEN '065:FNC_AWAITING_RESPONSE'
+		WHEN fnc_host_status='075' THEN '075:MATCH_ACCEPTED'
+	END AS v_fnc_host_status
+    ,CASE
+		WHEN fnc_guest_status='035' THEN '035:MATCH_TIMEOUT'
+		WHEN fnc_guest_status='045' THEN '045:MATCH_REJECTED'
+		WHEN fnc_guest_status='055' THEN '055:DEFAULT'
+		WHEN fnc_guest_status='065' THEN '065:FNC_AWAITING_RESPONSE'
+		WHEN fnc_guest_status='075' THEN '075:MATCH_ACCEPTED'
+	END AS v_fnc_guest_status
+    ,*
+FROM matches;

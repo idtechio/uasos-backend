@@ -1,3 +1,5 @@
+DROP VIEW IF EXISTS v_matches;
+
 CREATE OR REPLACE VIEW v_matches AS
 SELECT
     to_timestamp(cast(db_ts_matched as bigint)/1000)::timestamp AS v_db_ts_matched
