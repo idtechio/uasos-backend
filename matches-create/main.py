@@ -353,6 +353,7 @@ def update_status_bulk(db_connection, tbl, id_col_name, ids, target_status):
     )
 
     db_connection.execute(upd)
+    print(f"Updated {tbl}.{id_col_name}. Status set to {target_status} for {len(ids)} rows.")
 
 # endregion
 
