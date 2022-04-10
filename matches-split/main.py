@@ -113,8 +113,8 @@ def fnc_target(event, context):
     else:
         pubsub_msg = json.loads(event["data"])
 
-    if "matches_id" not in pubsub_msg or pubsub_msg["matches_id"] is None:
-        raise RuntimeError('message is missing required field "matches_id"!')
+    if "db_matches_id" not in pubsub_msg or pubsub_msg["db_matches_id"] is None:
+        raise RuntimeError('message is missing required field "db_matches_id"!')
 
     postgres_split_match(pubsub_msg)
 
