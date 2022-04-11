@@ -85,9 +85,6 @@ class MatchesStatus(Enum):
 
 
 class HostsGuestsStatus(Enum):
-    FNC_INACTIVE = "015"
-    FNC_DISABLED = "025"
-    MATCH_TIMEOUT = "035"
     MOD_REJECTED = "045"
     DEFAULT = "055"
     MOD_ACCEPTED = "065"
@@ -170,14 +167,14 @@ def postgres_process_timeout(pubsub_msg):
                     change_hosts_status = (
                         tbl_hosts.update()
                         .where(tbl_hosts.c.db_hosts_id == row["fnc_hosts_id"])
-                        .values(fnc_status=HostsGuestsStatus.MATCH_TIMEOUT)
+                        .values(fnc_status=HostsGuestsStatus.MOD_ACCEPTED)
                     )
                     conn.execute(change_hosts_status)
 
                     change_guests_status = (
                         tbl_guests.update()
                         .where(tbl_guests.c.db_guests_id == row["fnc_guests_id"])
-                        .values(fnc_status=HostsGuestsStatus.MATCH_TIMEOUT)
+                        .values(fnc_status=HostsGuestsStatus.MOD_ACCEPTED)
                     )
                     conn.execute(change_guests_status)
 
