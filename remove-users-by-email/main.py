@@ -73,7 +73,7 @@ def create_matches_table_mapping():
         table_name,
         meta,
         Column("db_matches_id", VARCHAR),
-        Column("fnc_ts_matched", VARCHAR),
+        Column("db_ts_matched", VARCHAR),
         Column("fnc_status", VARCHAR),
         Column("fnc_hosts_id", VARCHAR),
         Column("fnc_guests_id", VARCHAR),
