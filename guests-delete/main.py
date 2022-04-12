@@ -53,7 +53,7 @@ def create_db_engine():
         }
     else:
         db_config |= {
-            "guest": os.environ["DB_HOST"],
+            "host": os.environ["DB_HOST"],
             "port": os.environ["DB_PORT"],
             "database": os.environ["DB_NAME"],
             "username": os.environ["DB_USER"],
