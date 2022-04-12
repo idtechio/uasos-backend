@@ -1,3 +1,5 @@
+DROP VIEW IF EXISTS v_guests;
+
 CREATE OR REPLACE VIEW v_guests AS
 SELECT
     to_timestamp(cast(db_ts_registered as bigint)/1000)::timestamp AS v_db_ts_registered
