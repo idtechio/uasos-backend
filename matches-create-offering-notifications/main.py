@@ -414,8 +414,8 @@ def create_offering_notifications():
                             print(message_for_host)
                             fnc_publish_message(message_for_host)
 
-                            if guest_row['sms_notification'] == "TRUE":
-                                print(f"guest={host_row['db_hosts_id']} has enabled SMS notifications")
+                            if host_row['sms_notification'] == "TRUE":
+                                print(f"host={host_row['db_hosts_id']} has enabled SMS notifications")
                                 fnc_publish_sms(
                                     create_sms_payload(host_row["phone_num"], i18n.t("messaging.sms.offeringNotification", locale=host_row['preferred_lang']))
                                 )
