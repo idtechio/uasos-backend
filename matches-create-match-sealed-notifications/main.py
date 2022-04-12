@@ -305,7 +305,7 @@ def create_offering_notifications():
 
                         fnc_publish_message(message_for_guest)
                         if guest_row['sms_notification'] == "TRUE":
-                            print(f"guest={host_row['db_guests_id']} has enabled SMS notifications")
+                            print(f"guest={guest_row['db_guests_id']} has enabled SMS notifications")
                             fnc_publish_sms(
                                 create_sms_payload(phone_num=guest_row["phone_num"],
                                                    body=i18n.t("messaging.sms.sealedNotification", locale=guest_row['preferred_lang'])
