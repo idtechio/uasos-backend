@@ -4,6 +4,7 @@ CREATE OR REPLACE VIEW v_guests AS
 SELECT
     to_timestamp(cast(db_ts_registered as bigint)/1000)::timestamp AS v_db_ts_registered
     ,CASE
+		WHEN fnc_status='025' THEN '025:FNC_DISABLED'
 		WHEN fnc_status='035' THEN '035:MOD_DELETED'
 		WHEN fnc_status='045' THEN '045:DEFAULT'
 		WHEN fnc_status='065' THEN '065:MOD_ACCEPTED'
