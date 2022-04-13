@@ -1,4 +1,4 @@
-name: deploy_refresh_beds_stats
+name: dev_deploy_refresh_beds_stats
 
 on:
   push:
@@ -24,7 +24,8 @@ jobs:
       uses: 'google-github-actions/deploy-cloud-functions@v0'
       with:
         name: 'refresh_beds_stats'
-        runtime: 'python38'
+        runtime: 'python39'
         region: 'europe-central2'
         source_dir: 'refresh_beds_stats'
+        project_id: '${{secrets.DEV_PROJECT_ID}}'
 

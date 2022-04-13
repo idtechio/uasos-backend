@@ -1,4 +1,4 @@
-name: deploy-matches-process-timeout
+name: dev_deploy_matches_process_timeout
 
 on:
   push:
@@ -24,7 +24,8 @@ jobs:
       uses: 'google-github-actions/deploy-cloud-functions@v0'
       with:
         name: 'matches-process-timeout'
-        runtime: 'python38'
+        runtime: 'python39'
         region: 'europe-central2'
         source_dir: 'matches-process-timeout'
+        project_id: '${{secrets.DEV_PROJECT_ID}}'
 
