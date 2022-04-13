@@ -1,9 +1,11 @@
-name: deploy-matches-process-timeout
+name: deploy_refresh_beds_stats
 
 on:
   push:
+    branches:
+      - 'dev'
     paths:
-      - 'matches-process-timeout/main.py'
+      - 'refresh_beds_stats/main.py'
 
 jobs:
   deploy:
@@ -16,13 +18,13 @@ jobs:
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v0'
       with:
-        credentials_json: //TODO '${{secrets.CREDENTIALS}}'
+        credentials_json: '${{secrets.DEV_DEPLOYER_KEY}}'
 
     - id: 'deploy'
       uses: 'google-github-actions/deploy-cloud-functions@v0'
       with:
-        name: 'matches-process-timeout'
+        name: 'refresh_beds_stats'
         runtime: 'python38'
         region: 'europe-central2'
-        source_dir: 'matches-process-timeout'
+        source_dir: 'refresh_beds_stats'
 
