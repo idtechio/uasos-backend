@@ -22,8 +22,9 @@ messaging:
 common:
     'nationalities':
         'ukrainian': Ucraino
-        'nonUkarainian': 'Non ucraino'
+        'nonUkrainian': 'Non ucraino'
 sendgrid:
     'HostGetsMatch': d-9ecd2f420eac4722a24896520fee3d33
     'GuestGetsMatch': d-fc675a4d49384ea297223df70dfbc872
     'GUESTANDHOSTMATCHCONFIRM': d-f5c9c95609c64b8fad6e9ea355197d8a
+    'MatchTimeout': d-be31b40ce4a6420fade2c4db5fc3b584
