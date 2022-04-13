@@ -65,3 +65,5 @@ def refresh_materialized_view(db):
 
 def fnc_target(event, context):
     refresh_materialized_view(db)
+
+# This is end of file. Testing
