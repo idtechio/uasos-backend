@@ -1,0 +1,31 @@
+name: dev_deploy_matches_process_timeout
+
+on:
+  push:
+    branches:
+      - 'dev'
+    paths:
+      - 'matches-process-timeout/main.py'
+
+jobs:
+  deploy:
+    runs-on: 'ubuntu-latest'
+
+    steps:
+    - uses: 'actions/checkout@v3'
+
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        credentials_json: ${{secrets.DEV_DEPLOYER_KEY}}
+
+    - id: 'deploy'
+      uses: 'google-github-actions/deploy-cloud-functions@v0'
+      with:
+        name: 'matches-process-timeout'
+        runtime: 'python39'
+        region: 'europe-central2'
+        source_dir: 'matches-process-timeout'
+        project_id: ${{secrets.DEV_PROJECT_ID}}
+
