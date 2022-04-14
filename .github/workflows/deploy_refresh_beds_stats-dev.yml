@@ -32,8 +32,9 @@ jobs:
         timeout: '540'
         ingress_settings: 'all'
         env_vars: 'DB_CONNECTION_NAME=ukrn-hlpr-dev:europe-central2:sql-ukr-helper-dev,PROJECT_ID=ukrn-hlpr-dev,SECRET_CONFIGURATION_CONTEXT=FUNCTIONS_CONFIGURATION_CONTEXT'
-        event_trigger_type: 'projects/ukrn-hlpr-dev/topics/refresh_beds_stats'
-        # or event_trigger_type: 'trigger-topic'?
+        event_trigger_type: 'providers/cloud.pubsub/eventTypes/topic.publish'
+        event_trigger_resource: 'projects/ukrn-hlpr-dev/topics/refresh_beds_stats'
+
 
 
 
