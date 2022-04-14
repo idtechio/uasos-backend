@@ -4,7 +4,7 @@ import base64
 import json
 import time
 from enum import Enum
-from sqlalchemy import create_engine, Table, MetaData, Column, inspect
+from sqlalchemy import create_engine, Table, MetaData, Column, or_
 from sqlalchemy.dialects.postgresql import *
 
 from google.cloud import secretmanager
@@ -130,7 +130,12 @@ def postgres_renew(db_pool, pubsub_msg):
     stmt = (
         tbl_guests.update()
         .where(tbl_guests.c.db_guests_id == db_guests_id)
-        .where(tbl_guests.c.fnc_status == HostsGuestsStatus.FNC_INACTIVE)
+        .where(
+            or_(
+                tbl_guests.c.fnc_status == HostsGuestsStatus.FNC_INACTIVE,
+                tbl_guests.c.fnc_status == HostsGuestsStatus.FNC_DISABLED,
+            )
+        )
         .values(fnc_status=HostsGuestsStatus.MOD_ACCEPTED)
         .returning(tbl_guests.c.db_guests_id)
     )
