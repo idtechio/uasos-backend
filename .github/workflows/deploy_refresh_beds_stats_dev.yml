@@ -1,11 +1,11 @@
-name: dev_deploy_matches_process_timeout
+name: dev_deploy_refresh_beds_stats
 
 on:
   push:
     branches:
       - 'dev'
     paths:
-      - 'matches-process-timeout/main.py'
+      - 'refresh_beds_stats/main.py'
 
 jobs:
   deploy_dev:
@@ -23,18 +23,20 @@ jobs:
     - id: 'deploy'
       uses: 'google-github-actions/deploy-cloud-functions@v0'
       with:
-        name: 'matches-process-timeout'
+        name: 'refresh_beds_stats'
         runtime: 'python39'
         entry_point: 'fnc_target'
         memory_mb: '1024'
         region: 'europe-central2'
-        env_vars: 'ACCOUNTS_TABLE_NAME=accounts,DB_CONNECTION_NAME=ukrn-hlpr-dev:europe-central2:sql-ukr-helper-dev,GUESTS_TABLE_NAME=guests,HOSTS_TABLE_NAME=hosts,MATCHES_TABLE_NAME=matches,PROJECT_ID=ukrn-hlpr-dev,SECRET_CONFIGURATION_CONTEXT=FUNCTIONS_CONFIGURATION_CONTEXT'
-        source_dir: 'matches-process-timeout'
+        env_vars: 'DB_CONNECTION_NAME=ukrn-hlpr-dev:europe-central2:sql-ukr-helper-dev,PROJECT_ID=ukrn-hlpr-dev,SECRET_CONFIGURATION_CONTEXT=FUNCTIONS_CONFIGURATION_CONTEXT'
+        source_dir: 'refresh_beds_stats'
         project_id: ${{secrets.DEV_PROJECT_ID}}
         ingress_settings: 'ALLOW_ALL'
         service_account_email: 'gcf-sa@ukrn-hlpr-dev.iam.gserviceaccount.com'
         timeout: '540'
         event_trigger_type: 'google.pubsub.topic.publish'
-        event_trigger_resource: 'projects/ukrn-hlpr-dev/topics/matches_process_timeout'
+        event_trigger_resource: 'projects/ukrn-hlpr-dev/topics/refresh_beds_stats'
+
+
 
 
