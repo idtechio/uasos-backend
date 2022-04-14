@@ -324,9 +324,9 @@ def translate_shelter_type(shelter_type, preferred_lang):
 def translate_group_relation(group_relation, preferred_lang):
     group_relation = group_relation[1:-1]
     if group_relation == "single_man":
-        return i18n.t("group_relation.single_man", locale=preferred_lang)
+        return i18n.t("staticValues.groupRelations.single_man", locale=preferred_lang)
     elif group_relation == "single_woman":
-        return i18n.t("group_relation.single_woman", locale=preferred_lang)
+        return i18n.t("staticValues.groupRelations.single_woman", locale=preferred_lang)
     elif group_relation == "spouses":
         return i18n.t("staticValues.groupRelations.spouses", locale=preferred_lang)
     elif group_relation == "mother_with_children":
