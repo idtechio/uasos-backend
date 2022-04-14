@@ -31,6 +31,7 @@ jobs:
         memory_mb: '1024'
         timeout: '540'
         ingress_settings: 'all'
+        service_account_email: 'gcf-sa@ukrn-hlpr-dev.iam.gserviceaccount.com'
         env_vars: 'DB_CONNECTION_NAME=ukrn-hlpr-dev:europe-central2:sql-ukr-helper-dev,PROJECT_ID=ukrn-hlpr-dev,SECRET_CONFIGURATION_CONTEXT=FUNCTIONS_CONFIGURATION_CONTEXT'
         event_trigger_type: 'providers/cloud.pubsub/eventTypes/topic.publish'
         event_trigger_resource: 'projects/ukrn-hlpr-dev/topics/refresh_beds_stats'
