@@ -88,6 +88,7 @@ class MatchesStatus(Enum):
 
 
 class HostsGuestsStatus(Enum):
+    FNC_INACTIVE = "015"
     MOD_REJECTED = "045"
     DEFAULT = "055"
     MOD_ACCEPTED = "065"
@@ -200,6 +201,54 @@ def fnc_publish_message(message):
 
 
 # region data mutation services
+def change_guests_status(db_guests_id, target_status, db_conn):
+    tbl_guests_name = os.environ["GUESTS_TABLE_NAME"]
+    # tbl_guests_name = "guests"
+    tbl_guests = create_table_mapping(db_pool=db, db_table_name=tbl_guests_name)
+
+    change_guests_status = (
+        tbl_guests.update()
+            .where(tbl_guests.c.db_guests_id == db_guests_id)
+            .values(fnc_status=target_status)
+    )
+
+    result = db_conn.execute(change_guests_status)
+
+    print(f"changed status of db_guests_id={db_guests_id} to fnc_status={target_status} with result={result}")
+
+
+def change_hosts_status(db_hosts_id, target_status, db_conn):
+    tbl_hosts_name = os.environ["HOSTS_TABLE_NAME"]
+    # tbl_hosts_name = "hosts"
+    tbl_hosts = create_table_mapping(db_pool=db, db_table_name=tbl_hosts_name)
+
+    change_hosts_status = (
+        tbl_hosts.update()
+            .where(tbl_hosts.c.db_hosts_id == db_hosts_id)
+            .values(fnc_status=target_status)
+    )
+
+    result = db_conn.execute(change_hosts_status)
+
+    print(f"changed status of db_hosts_id={db_hosts_id} to fnc_status={target_status} with result={result}")
+
+
+def change_matches_status(db_matches_id, target_status, db_conn):
+    tbl_matches_name = os.environ["MATCHES_TABLE_NAME"]
+    # tbl_matches_name = "matches"
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=tbl_matches_name)
+
+    change_matches_status = (
+        tbl_matches.update()
+            .where(tbl_matches.c.db_matches_id == db_matches_id)
+            .values(fnc_status=target_status)
+    )
+
+    result = db_conn.execute(change_matches_status)
+
+    print(f"changed status of db_matches_id={db_matches_id} to fnc_status={target_status} with result={result}")
+
+
 def postgres_process_timeout(pubsub_msg):
     tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
     tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
@@ -227,20 +276,14 @@ def postgres_process_timeout(pubsub_msg):
                 if check_expired_in_hours(
                     row["db_ts_matched"], configuration_context["MATCH_TIMEOUT_HOURS"]
                 ):
-                    change_matches_status = (
-                        tbl_matches.update()
-                        .where(tbl_matches.c.db_matches_id == row["db_matches_id"])
-                        .values(fnc_status=MatchesStatus.MATCH_REJECTED)
-                    )
-                    conn.execute(change_matches_status)
+                    change_matches_status(db_matches_id=row["db_matches_id"],
+                                          target_status=MatchesStatus.MATCH_REJECTED,
+                                          db_conn=conn)
 
                     if row['fnc_host_status'] is not MatchesStatus.FNC_AWAITING_RESPONSE:
-                        change_hosts_status = (
-                            tbl_hosts.update()
-                            .where(tbl_hosts.c.db_hosts_id == row["fnc_hosts_id"])
-                            .values(fnc_status=HostsGuestsStatus.MOD_ACCEPTED)
-                        )
-                        conn.execute(change_hosts_status)
+                        change_hosts_status(db_hosts_id=row["fnc_hosts_id"],
+                                            target_status=HostsGuestsStatus.MOD_ACCEPTED,
+                                            db_conn=conn)
                     else:
                         sel_hosts = tbl_hosts.select().where(tbl_hosts.c.db_hosts_id == row["fnc_hosts_id"])
                         result = conn.execute(sel_hosts)
@@ -257,14 +300,14 @@ def postgres_process_timeout(pubsub_msg):
                             )
                             print(message_for_host)
                             fnc_publish_message(message_for_guest)
+                            change_guests_status(db_guests_id=row["fnc_guests_id"],
+                                                 target_status=HostsGuestsStatus.FNC_INACTIVE,
+                                                 db_conn=conn)
 
                     if row['fnc_guest_status'] is not MatchesStatus.FNC_AWAITING_RESPONSE:
-                        change_guests_status = (
-                            tbl_guests.update()
-                            .where(tbl_guests.c.db_guests_id == row["fnc_guests_id"])
-                            .values(fnc_status=HostsGuestsStatus.MOD_ACCEPTED)
-                        )
-                        conn.execute(change_guests_status)
+                        change_guests_status(db_guests_id=row["fnc_guests_id"],
+                                             target_status=HostsGuestsStatus.MOD_ACCEPTED,
+                                             db_conn=conn)
                     else:
                         sel_guests = tbl_guests.select().where(tbl_guests.c.db_guests_id == row["fnc_guests_id"])
                         result = conn.execute(sel_guests)
@@ -282,6 +325,9 @@ def postgres_process_timeout(pubsub_msg):
 
                             print(message_for_guest)
                             fnc_publish_message(message_for_guest)
+                            change_hosts_status(db_hosts_id=row["fnc_hosts_id"],
+                                                target_status=HostsGuestsStatus.FNC_INACTIVE,
+                                                db_conn=conn)
 
 # endregion
 
