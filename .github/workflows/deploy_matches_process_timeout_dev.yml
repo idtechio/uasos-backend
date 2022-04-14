@@ -34,7 +34,7 @@ jobs:
         ingress_settings: 'ALLOW_ALL'
         service_account_email: 'gcf-sa@ukrn-hlpr-dev.iam.gserviceaccount.com'
         env_vars: 'ACCOUNTS_TABLE_NAME=accounts,DB_CONNECTION_NAME=ukrn-hlpr-dev:europe-central2:sql-ukr-helper-dev,GUESTS_TABLE_NAME=guests,HOSTS_TABLE_NAME=hosts,MATCHES_TABLE_NAME=matches,PROJECT_ID=ukrn-hlpr-dev,SECRET_CONFIGURATION_CONTEXT=FUNCTIONS_CONFIGURATION_CONTEXT'
-        event_trigger_type: 'providers/cloud.pubsub/eventTypes/topic.publish'
+        event_trigger_type: 'google.pubsub.topic.publish'
         event_trigger_resource: 'projects/ukrn-hlpr-dev/topics/matches_process_timeout'
 
 
