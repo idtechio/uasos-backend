@@ -91,7 +91,6 @@ def check_guest_match_exists(guests_id, db_conn):
     tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
 
     sel_matches = tbl_matches.select().where(tbl_matches.c.fnc_guests_id == guests_id)
-    # db_conn.execute(sel_matches) # FIXME: redundant?
 
     result = bool(db_conn.execute(sel_matches).scalar())
 
@@ -99,6 +98,19 @@ def check_guest_match_exists(guests_id, db_conn):
 
     return result
 
+
+def check_guest_match_in_status_exists(guests_id, db_conn, status=None):
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
+
+    sel_matches = (
+        tbl_matches.select().where(tbl_matches.c.fnc_guests_id == guests_id).where(tbl_matches.c.fnc_status == status)
+    )
+
+    result = bool(db_conn.execute(sel_matches).scalar())
+
+    print(f'checking if match for guest={guests_id} exists={result}')
+
+    return result
 
 # endregion
 
@@ -209,24 +221,37 @@ def postgres_update(db_pool, pubsub_msg):
 
     with db_pool.connect() as conn:
         with conn.begin():
+            # check if listing exists
             if not check_guest_listing_exists(guests_id=db_guests_id, db_conn=conn):
-                raise ValueError(f'listing for guest={db_guests_id} does not exist!')
+                raise ValueError(f'listing for db_guests_id={db_guests_id} does not exist!')
 
+            # check if match in status MATCH_ACCEPTED exists for this guest
+            if check_guest_match_in_status_exists(guests_id=db_guests_id, db_conn=conn,
+                                                  status=MatchesStatus.MATCH_ACCEPTED):
+                raise ValueError(
+                    f'listing for db_guests_id={db_guests_id} is already part of MATCH in status={MatchesStatus.MATCH_ACCEPTED}')
+
+            # soft-delete guest
+            change_guests_status(db_guests_id=db_guests_id,
+                                 target_status=HostsGuestsStatus.MOD_DELETED,
+                                 db_conn=conn)
+
+            # check if match exists to split (is not in MATCH_ACCEPTED status)
             if check_guest_match_exists(guests_id=db_guests_id, db_conn=conn):
-                change_guests_status(db_guests_id=db_guests_id,
-                                     target_status=HostsGuestsStatus.MOD_DELETED,
-                                     db_conn=conn)
-
-                if 'db_matches_id' in db_guests_id:
-                    print(f'guest db_guest_id={db_guests_id} is in match - splitting')
+                # check if match exists to split (is not in MATCH_ACCEPTED status)
+                if 'db_matches_id' in pubsub_msg:
                     db_matches_id = pubsub_msg["db_matches_id"]
+                    print(f'guest db_guest_id={db_guests_id} is in MATCH that can be split db_matches_id={db_matches_id}')
 
+                    # select a match
                     tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
                     sel_matches = tbl_matches.select().where(tbl_matches.c.db_matches_id == db_matches_id)
                     result = conn.execute(sel_matches)
 
                     for match_row in result:
                         db_hosts_id = match_row['fnc_hosts_id']
+                        print(f'splitting db_matches_id={db_matches_id} for db_guest_id={db_guests_id} and db_host_id={db_hosts_id} - initiated by guest')
+
                         change_guests_status(db_guests_id=db_guests_id,
                                              target_status=HostsGuestsStatus.MOD_DELETED,
                                              db_conn=conn)

@@ -90,7 +90,10 @@ def check_host_listing_exists(hosts_id, db_conn):
 def check_host_match_exists(hosts_id, db_conn):
     tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
 
-    sel_matches = tbl_matches.select().where(tbl_matches.c.fnc_hosts_id == hosts_id)
+    sel_matches = (
+        tbl_matches.select()
+            .where(tbl_matches.c.fnc_hosts_id == hosts_id)
+    )
     db_conn.execute(sel_matches)
 
     result = bool(db_conn.execute(sel_matches).scalar())
@@ -100,6 +103,20 @@ def check_host_match_exists(hosts_id, db_conn):
     return result
 
 
+def check_host_match_in_status_exists(hosts_id, db_conn, status=None):
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
+
+    sel_matches = (
+        tbl_matches.select()
+            .where(tbl_matches.c.fnc_guests_id == hosts_id)
+            .where(tbl_matches.c.fnc_status == status)
+    )
+
+    result = bool(db_conn.execute(sel_matches).scalar())
+
+    print(f'checking if match for guest={hosts_id} exists={result}')
+
+    return result
 # endregion
 
 
@@ -211,30 +228,43 @@ def postgres_update(db_pool, pubsub_msg):
 
     with db_pool.connect() as conn:
         with conn.begin():
-            if check_host_match_exists(hosts_id=db_hosts_id, db_conn=conn):
-                raise ValueError(f'listing for host={db_hosts_id} is already in marriage')
+            # check if listing exists
+            if not check_host_listing_exists(hosts_id=db_hosts_id, db_conn=conn):
+                raise ValueError(f'listing for db_hosts_id={db_hosts_id} does not exist!')
 
-            if check_host_match_exists(hosts_id=db_hosts_id, db_conn=conn):
-                change_hosts_status(db_hosts_id=db_hosts_id,
-                                    target_status=HostsGuestsStatus.MOD_DELETED,
-                                    db_conn=conn)
+            # check if match in status MATCH_ACCEPTED exists for this guest
+            if check_host_match_in_status_exists(hosts_id=db_hosts_id, db_conn=conn,
+                                                 status=MatchesStatus.MATCH_ACCEPTED):
+                raise ValueError(
+                    f'listing for db_hosts_id={db_hosts_id} is already part of MATCH in status={MatchesStatus.MATCH_ACCEPTED}')
 
-                if 'db_matches_id' in db_hosts_id:
-                    print(f'host db_host_id={db_hosts_id} is in match - splitting')
+            # soft-delete guest
+            change_hosts_status(db_hosts_id=db_hosts_id,
+                                target_status=HostsGuestsStatus.MOD_DELETED,
+                                db_conn=conn)
+
+            # check if match exists to split (is not in MATCH_ACCEPTED status)
+            if check_host_match_exists(hosts_id=db_hosts_id, db_conn=conn):
+                # check if match exists to split (is not in MATCH_ACCEPTED status)
+                if 'db_matches_id' in pubsub_msg:
                     db_matches_id = pubsub_msg["db_matches_id"]
+                    print(f'host db_host_id={db_hosts_id} is in MATCH that can be split db_matches_id={db_matches_id}')
 
+                    # select a match
                     tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
                     sel_matches = tbl_matches.select().where(tbl_matches.c.db_matches_id == db_matches_id)
                     result = conn.execute(sel_matches)
 
                     for match_row in result:
                         db_guests_id = match_row['fnc_guests_id']
-                        change_hosts_status(db_hosts_id=db_hosts_id,
-                                            target_status=HostsGuestsStatus.MOD_DELETED,
-                                            db_conn=conn)
+                        print(f'splitting db_matches_id={db_matches_id} for db_guest_id={db_guests_id} and db_host_id={db_hosts_id} - initiated by host')
+
                         change_guests_status(db_guests_id=db_guests_id,
                                              target_status=HostsGuestsStatus.MOD_ACCEPTED,
                                              db_conn=conn)
+                        change_hosts_status(db_hosts_id=db_hosts_id,
+                                            target_status=HostsGuestsStatus.MOD_DELETED,
+                                            db_conn=conn)
                         change_matches_status(db_matches_id=db_matches_id,
                                               target_status=MatchesStatus.MATCH_REJECTED,
                                               db_conn=conn)
