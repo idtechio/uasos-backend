@@ -25,6 +25,7 @@ jobs:
       with:
         name: 'matches-process-timeout'
         runtime: 'python39'
+        entry_point: 'fnc_target'
         region: 'europe-central2'
         source_dir: 'matches-process-timeout'
         project_id: ${{secrets.DEV_PROJECT_ID}}
