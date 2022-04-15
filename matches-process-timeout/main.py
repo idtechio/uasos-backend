@@ -280,7 +280,7 @@ def postgres_process_timeout(pubsub_msg):
                                           target_status=MatchesStatus.MATCH_REJECTED,
                                           db_conn=conn)
 
-                    if row['fnc_host_status'] != MatchesStatus.FNC_AWAITING_RESPONSE:
+                    if row['fnc_host_status'] != MatchesStatus.FNC_AWAITING_RESPONSE.value:
                         change_hosts_status(db_hosts_id=row["fnc_hosts_id"],
                                             target_status=HostsGuestsStatus.MOD_ACCEPTED,
                                             db_conn=conn)
@@ -305,7 +305,7 @@ def postgres_process_timeout(pubsub_msg):
                                                 target_status=HostsGuestsStatus.FNC_INACTIVE,
                                                 db_conn=conn)
 
-                    if row['fnc_guest_status'] != MatchesStatus.FNC_AWAITING_RESPONSE:
+                    if row['fnc_guest_status'] != MatchesStatus.FNC_AWAITING_RESPONSE.value:
                         change_guests_status(db_guests_id=row["fnc_guests_id"],
                                              target_status=HostsGuestsStatus.MOD_ACCEPTED,
                                              db_conn=conn)
