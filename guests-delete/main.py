@@ -237,29 +237,27 @@ def postgres_update(db_pool, pubsub_msg):
                                  db_conn=conn)
 
             # check if match exists to split (is not in MATCH_ACCEPTED status)
-            if check_guest_match_exists(guests_id=db_guests_id, db_conn=conn):
-                # check if match exists to split (is not in MATCH_ACCEPTED status)
-                if 'db_matches_id' in pubsub_msg:
-                    db_matches_id = pubsub_msg["db_matches_id"]
-                    print(f'guest db_guest_id={db_guests_id} is in MATCH that can be split db_matches_id={db_matches_id}')
+            if 'db_matches_id' in pubsub_msg:
+                db_matches_id = pubsub_msg["db_matches_id"]
+                print(f'guest db_guest_id={db_guests_id} is in MATCH that can be split db_matches_id={db_matches_id}')
 
-                    # select a match
-                    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
-                    sel_matches = tbl_matches.select().where(tbl_matches.c.db_matches_id == db_matches_id)
-                    result = conn.execute(sel_matches)
+                # select a match
+                tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
+                sel_matches = tbl_matches.select().where(tbl_matches.c.db_matches_id == db_matches_id)
+                result = conn.execute(sel_matches)
 
-                    for match_row in result:
-                        db_hosts_id = match_row['fnc_hosts_id']
-                        print(f'splitting db_matches_id={db_matches_id} for db_guest_id={db_guests_id} and db_host_id={db_hosts_id} - initiated by guest')
+                for match_row in result:
+                    db_hosts_id = match_row['fnc_hosts_id']
+                    print(f'splitting db_matches_id={db_matches_id} for db_guest_id={db_guests_id} and db_host_id={db_hosts_id} - initiated by guest')
 
-                        change_guests_status(db_guests_id=db_guests_id,
-                                             target_status=HostsGuestsStatus.MOD_DELETED,
-                                             db_conn=conn)
-                        change_hosts_status(db_hosts_id=db_hosts_id,
-                                            target_status=HostsGuestsStatus.MOD_ACCEPTED,
+                    change_guests_status(db_guests_id=db_guests_id,
+                                            target_status=HostsGuestsStatus.MOD_DELETED,
                                             db_conn=conn)
-                        change_matches_status(db_matches_id=db_matches_id,
-                                              target_status=MatchesStatus.MATCH_REJECTED,
-                                              db_conn=conn)
+                    change_hosts_status(db_hosts_id=db_hosts_id,
+                                        target_status=HostsGuestsStatus.MOD_ACCEPTED,
+                                        db_conn=conn)
+                    change_matches_status(db_matches_id=db_matches_id,
+                                            target_status=MatchesStatus.MATCH_REJECTED,
+                                            db_conn=conn)
 
 # endregion
