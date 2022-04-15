@@ -78,6 +78,18 @@ db = create_db_engine()
 # endregion
 
 
+# region i18n initialisation
+TRANSLATIONS_FILE_PATH = './locale'
+
+i18n.set('fallback', 'en')
+i18n.set('filename_format', '{locale}.{format}')
+i18n.set('skip_locale_root_data', True)
+i18n.load_path.append(TRANSLATIONS_FILE_PATH)
+
+print(f'i18n initialised - configuration={i18n.load_path}')
+# endregion
+
+
 # region Enum definitions
 class MatchesStatus(Enum):
     DEFAULT = "055"
