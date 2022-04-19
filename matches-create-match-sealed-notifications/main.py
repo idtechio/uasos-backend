@@ -193,7 +193,7 @@ def query_acceptance_url(matches_id, accept_value, side):
     )
 
 
-def create_paylod_for_guest_and_host_match_confirm_template(
+def create_payload_for_guest_and_host_match_confirm_template(
     matches_id, guest_row, host_row, to_emails, preferred_lang
 ):
 
@@ -270,7 +270,7 @@ def create_offering_notifications():
                 for host_row in host_rows:
                     for guest_row in guest_rows:
                         message_for_host = (
-                            create_paylod_for_guest_and_host_match_confirm_template(
+                            create_payload_for_guest_and_host_match_confirm_template(
                                 matches_id=match["db_matches_id"],
                                 guest_row=guest_row,
                                 host_row=host_row,
@@ -281,7 +281,7 @@ def create_offering_notifications():
                             )
                         )
                         message_for_guest = (
-                            create_paylod_for_guest_and_host_match_confirm_template(
+                            create_payload_for_guest_and_host_match_confirm_template(
                                 matches_id=match["db_matches_id"],
                                 guest_row=guest_row,
                                 host_row=host_row,

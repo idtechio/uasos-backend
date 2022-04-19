@@ -17,13 +17,14 @@ staticValues:
         'no': Nu
 messaging:
     'sms':
-        'offeringNotification': ''
+        'offeringNotification': 'Am identificat un contact. Acceptați/respingeți pe uasos.org sau e-mai'
         'sealedNotification': 'Am găsit un contact. Acceptați/respingeți pe uasos.org sau e-mail.'
 common:
     'nationalities':
-        'ukrainian': ''
-        'nonUkarainian': ''
+        'ukrainian': Ucrainean
+        'nonUkrainian': Non-Ucrainean
 sendgrid:
     'HostGetsMatch': ''
     'GuestGetsMatch': ''
     'GUESTANDHOSTMATCHCONFIRM': ''
+    'MatchTimeout': ''

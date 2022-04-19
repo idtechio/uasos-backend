@@ -21,9 +21,10 @@ messaging:
         'sealedNotification': 'Nous avons un contact pour vous ! Vérifiez votre e-mail et confirmez.'
 common:
     'nationalities':
-        'ukrainian': ''
-        'nonUkarainian': ''
+        'ukrainian': Ukrainien
+        'nonUkrainian': Non-ukrainien
 sendgrid:
     'HostGetsMatch': ''
     'GuestGetsMatch': ''
     'GUESTANDHOSTMATCHCONFIRM': ''
+    'MatchTimeout': ''

@@ -91,7 +91,6 @@ def check_guest_match_exists(guests_id, db_conn):
     tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
 
     sel_matches = tbl_matches.select().where(tbl_matches.c.fnc_guests_id == guests_id)
-    db_conn.execute(sel_matches)
 
     result = bool(db_conn.execute(sel_matches).scalar())
 
@@ -100,10 +99,31 @@ def check_guest_match_exists(guests_id, db_conn):
     return result
 
 
+def check_guest_match_in_status_exists(guests_id, db_conn, status=None):
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
+
+    sel_matches = (
+        tbl_matches.select().where(tbl_matches.c.fnc_guests_id == guests_id).where(tbl_matches.c.fnc_status == status)
+    )
+
+    result = bool(db_conn.execute(sel_matches).scalar())
+
+    print(f'checking if match for guest={guests_id} exists={result}')
+
+    return result
+
 # endregion
 
 
 # region Enum definitions
+class MatchesStatus(Enum):
+    DEFAULT = "055"
+    FNC_AWAITING_RESPONSE = "065"
+    MATCH_ACCEPTED = "075"
+    MATCH_REJECTED = "045"
+    MATCH_TIMEOUT = "035"
+
+
 class HostsGuestsStatus(Enum):
     MOD_DELETED = '035'
     MOD_REJECTED = "045"
@@ -146,30 +166,98 @@ def fnc_target(event, context):
 
 
 # region data mutation services
-def change_guest_status(guests_id, db_conn):
-    tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
-
-    print(f'updating status for guest={guests_id} to={HostsGuestsStatus.MOD_DELETED.value}')
+def change_guests_status(db_guests_id, target_status, db_conn):
+    tbl_guests_name = os.environ["GUESTS_TABLE_NAME"]
+    # tbl_guests_name = "guests"
+    tbl_guests = create_table_mapping(db_pool=db, db_table_name=tbl_guests_name)
 
     change_guests_status = (
         tbl_guests.update()
-            .where(tbl_guests.c.db_guests_id == guests_id)
-            .values(fnc_status=HostsGuestsStatus.MOD_DELETED)
+            .where(tbl_guests.c.db_guests_id == db_guests_id)
+            .values(fnc_status=target_status)
     )
 
-    db_conn.execute(change_guests_status)
+    result = db_conn.execute(change_guests_status)
+
+    print(f"changed status of db_guests_id={db_guests_id} to fnc_status={target_status} with result={result}")
 
 
+def change_hosts_status(db_hosts_id, target_status, db_conn):
+    tbl_hosts_name = os.environ["HOSTS_TABLE_NAME"]
+    # tbl_hosts_name = "hosts"
+    tbl_hosts = create_table_mapping(db_pool=db, db_table_name=tbl_hosts_name)
+
+    change_hosts_status = (
+        tbl_hosts.update()
+            .where(tbl_hosts.c.db_hosts_id == db_hosts_id)
+            .values(fnc_status=target_status)
+    )
+
+    result = db_conn.execute(change_hosts_status)
+
+    print(f"changed status of db_hosts_id={db_hosts_id} to fnc_status={target_status} with result={result}")
+
+
+def change_matches_status(db_matches_id, target_status, db_conn):
+    tbl_matches_name = os.environ["MATCHES_TABLE_NAME"]
+    # tbl_matches_name = "matches"
+    tbl_matches = create_table_mapping(db_pool=db, db_table_name=tbl_matches_name)
+
+    change_matches_status = (
+        tbl_matches.update()
+            .where(tbl_matches.c.db_matches_id == db_matches_id)
+            .values(fnc_status=target_status)
+    )
+
+    result = db_conn.execute(change_matches_status)
+
+    print(f"changed status of db_matches_id={db_matches_id} to fnc_status={target_status} with result={result}")
+# endregion
+
+
+# region main function
 def postgres_update(db_pool, pubsub_msg):
     db_guests_id = pubsub_msg["db_guests_id"]
 
     with db_pool.connect() as conn:
         with conn.begin():
-            if check_guest_match_exists(guests_id=db_guests_id, db_conn=conn):
-                raise ValueError(f'listing for guest={db_guests_id} is already in marriage')
-
+            # check if listing exists
             if not check_guest_listing_exists(guests_id=db_guests_id, db_conn=conn):
-                raise ValueError(f'listing for guest={db_guests_id} does not exist!')
+                raise ValueError(f'listing for db_guests_id={db_guests_id} does not exist!')
 
-            change_guest_status(guests_id=db_guests_id, db_conn=conn)
+            # check if match in status MATCH_ACCEPTED exists for this guest
+            if check_guest_match_in_status_exists(guests_id=db_guests_id, db_conn=conn,
+                                                  status=MatchesStatus.MATCH_ACCEPTED):
+                raise ValueError(
+                    f'listing for db_guests_id={db_guests_id} is already part of MATCH in status={MatchesStatus.MATCH_ACCEPTED}')
+
+            # soft-delete guest
+            change_guests_status(db_guests_id=db_guests_id,
+                                 target_status=HostsGuestsStatus.MOD_DELETED,
+                                 db_conn=conn)
+
+            # check if match exists to split (is not in MATCH_ACCEPTED status)
+            if 'db_matches_id' in pubsub_msg:
+                db_matches_id = pubsub_msg["db_matches_id"]
+                print(f'guest db_guest_id={db_guests_id} is in MATCH that can be split db_matches_id={db_matches_id}')
+
+                # select a match
+                tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
+                sel_matches = tbl_matches.select().where(tbl_matches.c.db_matches_id == db_matches_id)
+                result = conn.execute(sel_matches)
+
+                for match_row in result:
+                    db_hosts_id = match_row['fnc_hosts_id']
+                    print(f'splitting db_matches_id={db_matches_id} for db_guest_id={db_guests_id} and db_host_id={db_hosts_id} - initiated by guest')
+
+                    change_guests_status(db_guests_id=db_guests_id,
+                                            target_status=HostsGuestsStatus.MOD_DELETED,
+                                            db_conn=conn)
+                    change_hosts_status(db_hosts_id=db_hosts_id,
+                                        target_status=HostsGuestsStatus.MOD_ACCEPTED,
+                                        db_conn=conn)
+                    change_matches_status(db_matches_id=db_matches_id,
+                                            target_status=MatchesStatus.MATCH_REJECTED,
+                                            db_conn=conn)
+
 # endregion
