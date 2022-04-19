@@ -1,0 +1,40 @@
+name: dev_deploy_hosts_renew
+
+on:
+  push:
+    branches:
+      - 'dev'
+    paths:
+      - 'hosts-renew/main.py'
+
+jobs:
+  deploy_dev:
+    runs-on: 'ubuntu-latest'
+
+    steps:
+    - uses: 'actions/checkout@v3'
+
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        credentials_json: ${{secrets.DEV_DEPLOYER_KEY}}
+
+    - id: 'deploy'
+      uses: 'google-github-actions/deploy-cloud-functions@v0'
+      with:
+        name: 'hosts-renew'
+        runtime: 'python39'
+        entry_point: 'fnc_target'
+        memory_mb: '1024'
+        region: 'europe-central2'
+        env_vars: 'ACCOUNTS_TABLE_NAME=accounts,DB_CONNECTION_NAME=ukrn-hlpr-dev:europe-central2:sql-ukr-helper-dev,GUESTS_TABLE_NAME=guests,HOSTS_TABLE_NAME=hosts,MATCHES_TABLE_NAME=matches,PROJECT_ID=ukrn-hlpr-dev,SECRET_CONFIGURATION_CONTEXT=FUNCTIONS_CONFIGURATION_CONTEXT'
+        source_dir: 'hosts-renew'
+        project_id: ${{secrets.DEV_PROJECT_ID}}
+        ingress_settings: 'ALLOW_ALL'
+        service_account_email: 'gcf-sa@ukrn-hlpr-dev.iam.gserviceaccount.com'
+        timeout: '540'
+        event_trigger_type: 'google.pubsub.topic.publish'
+        event_trigger_resource: 'projects/ukrn-hlpr-dev/topics/hosts-renew'
+
+
