@@ -22,4 +22,5 @@ SELECT
     ,preferred_lang
     ,sms_notification
     ,identity_verified
+    ,identity_cis_file_uid
 FROM accounts;

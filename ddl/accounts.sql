@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     ,preferred_lang VARCHAR
     ,sms_notification VARCHAR
     ,identity_verified VARCHAR
+    ,identity_cis_file_uid VARCHAR
 );
 
 CREATE UNIQUE INDEX accounts_uid_uindex
