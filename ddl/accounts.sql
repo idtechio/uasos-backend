@@ -20,3 +20,6 @@ CREATE TABLE IF NOT EXISTS accounts (
 
 CREATE UNIQUE INDEX accounts_uid_uindex
     on accounts (uid);
+
+CREATE INDEX accounts_identity_cis_file_uid_index
+    ON accounts (identity_cis_file_uid);
