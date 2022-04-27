@@ -31,6 +31,7 @@ GCF_IMAGE_NAME="${PROJECT_NAME}-fnc-${GCF_NAME}"
 if [[ "$BUILDER" = "custom" ]]
 then
     docker build . \
+        --no-cache \
         -t ${GCF_IMAGE_NAME} \
         -f ${DOCKERFILE} \
         --build-arg PROJECT_NAME=${PROJECT_NAME} \

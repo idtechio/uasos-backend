@@ -48,11 +48,7 @@ down:
 clean:
 	$(DC_CMD) rm -f $(s)
 
-recreate:
-	$(DC_CMD) stop $(s)
-	$(DC_CMD) rm -f $(s)
-	$(DC_CMD) pull $(s)
-	$(DC_CMD) up --build -d --remove-orphans $(s)
+recreate: stop clean build
 
 exec:
 	$(DC_CMD) exec $(s) $(c)
