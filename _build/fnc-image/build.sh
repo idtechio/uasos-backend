@@ -1,7 +1,6 @@
 #!/bin/bash
-SELF=`readlink -f $0`
-ROOT_DIR=`dirname $SELF`
-PARENT_DIR=`dirname $(dirname $SELF)`
+ROOT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PARENT_DIR=`dirname $ROOT_DIR`
 
 cd $ROOT_DIR
 
@@ -31,6 +30,7 @@ GCF_IMAGE_NAME="${PROJECT_NAME}-fnc-${GCF_NAME}"
 if [[ "$BUILDER" = "custom" ]]
 then
     docker build . \
+        --no-cache \
         -t ${GCF_IMAGE_NAME} \
         -f ${DOCKERFILE} \
         --build-arg PROJECT_NAME=${PROJECT_NAME} \
