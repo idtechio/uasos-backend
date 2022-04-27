@@ -1,7 +1,6 @@
 #!/bin/bash
-SELF=`readlink -f $0`
-ROOT_DIR=`dirname $SELF`
-PARENT_DIR=`dirname $(dirname $SELF)`
+ROOT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PARENT_DIR=`dirname $ROOT_DIR`
 
 cd $ROOT_DIR
 
