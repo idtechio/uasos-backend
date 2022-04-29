@@ -1,0 +1,30 @@
+staticValues:
+    'groupRelations':
+        'single_man': 'Bărbat singur'
+        'single_woman': 'Femeie singură'
+        'spouses': Soți/cuplu
+        'mother_with_children': 'Mamă cu copii'
+        'family_with_children': 'Familie cu copii'
+        'unrelated_group': 'Grup neînrudit'
+    'accommodationTypes':
+        'bed': 'Pat într-o cameră comună'
+        'room': 'Cameră într-un apartament / casă comună'
+        'flat': 'Apartament pentru uz exclusiv'
+        'house': 'Casă pentru uz exclusiv'
+        'public_shared_space': 'Cameră comună (de exemplu sală de școală)'
+    'boolean':
+        'yes': Da
+        'no': Nu
+messaging:
+    'sms':
+        'offeringNotification': 'Am identificat un contact. Acceptați/respingeți pe uasos.org sau e-mai'
+        'sealedNotification': 'Am găsit un contact. Acceptați/respingeți pe uasos.org sau e-mail.'
+common:
+    'nationalities':
+        'ukrainian': Ucrainean
+        'nonUkrainian': Non-Ucrainean
+sendgrid:
+    'HostGetsMatch': ''
+    'GuestGetsMatch': ''
+    'GUESTANDHOSTMATCHCONFIRM': ''
+    'MatchTimeout': ''
