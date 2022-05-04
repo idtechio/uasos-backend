@@ -102,6 +102,8 @@ def fnc_target(event, context):
     if not running_locally:
         pubsub_msg = json.loads(base64.b64decode(event["data"]).decode("utf-8"))
     else:
+        if 'SLEEP' in os.environ and os.environ["SLEEP"] != None:
+            time.sleep(int(os.environ["SLEEP"]))
         pubsub_msg = json.loads(event["data"])
     postgres_update(db_pool=db, pubsub_msg=pubsub_msg)
 # endregion

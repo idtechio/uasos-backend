@@ -1,0 +1,29 @@
+server {
+    listen       ${ROUTE_FNC_PORT};
+    server_name  localhost;
+
+    location /hosts-insert {
+        proxy_pass http://hosts-insert:${FNC_DEFAULT_PORT}/;
+    }
+    location /hosts-update {
+        proxy_pass http://hosts-update:${FNC_DEFAULT_PORT}/;
+    }
+    location /hosts-delete {
+        proxy_pass http://hosts-delete:${FNC_DEFAULT_PORT}/;
+    }
+    location /guests-insert {
+        proxy_pass http://guests-insert:${FNC_DEFAULT_PORT}/;
+    }
+    location /guests-update {
+        proxy_pass http://guests-update:${FNC_DEFAULT_PORT}/;
+    }
+    location /guests-delete {
+        proxy_pass http://guests-delete:${FNC_DEFAULT_PORT}/;
+    }
+    location /accounts-insert {
+        proxy_pass http://accounts-insert:${FNC_DEFAULT_PORT}/;
+    }
+    location /accounts-update {
+        proxy_pass http://accounts-update:${FNC_DEFAULT_PORT}/;
+    }
+}

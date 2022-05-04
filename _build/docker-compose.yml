@@ -1,0 +1,122 @@
+version: "3"
+
+services:
+
+  postgres:
+    image: postgres:${PG_VERSION}
+    profiles:
+      - standard
+    env_file:
+      - .env
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - ../${DDL_DIR}:/tmp/ddl
+
+  pgadmin:
+    image: dpage/pgadmin4
+    profiles:
+      - pgadmin
+    env_file:
+      - .env
+    volumes:
+      - ./pgadmin-conf/servers.json:/pgadmin4/servers.json
+    ports:
+      - "${ROUTE_PGADMIN_PORT}:80"
+
+  hosts-insert:
+    image: ${PROJECT_NAME}-fnc-hosts-insert:latest
+    profiles:
+      - standard
+    env_file:
+      - .env
+    expose:
+      - "${FNC_DEFAULT_PORT}"
+    environment:
+      - PORT=${FNC_DEFAULT_PORT}
+
+  hosts-update:
+    image: ${PROJECT_NAME}-fnc-hosts-update:latest
+    profiles:
+      - standard
+    env_file:
+      - .env
+    expose:
+      - "${FNC_DEFAULT_PORT}"
+    environment:
+      - PORT=${FNC_DEFAULT_PORT}
+
+  hosts-delete:
+    image: ${PROJECT_NAME}-fnc-hosts-delete:latest
+    profiles:
+      - standard
+    env_file:
+      - .env
+    expose:
+      - "${FNC_DEFAULT_PORT}"
+    environment:
+      - PORT=${FNC_DEFAULT_PORT}
+
+  guests-insert:
+    image: ${PROJECT_NAME}-fnc-guests-insert:latest
+    profiles:
+      - standard
+    env_file:
+      - .env
+    expose:
+      - "${FNC_DEFAULT_PORT}"
+    environment:
+      - PORT=${FNC_DEFAULT_PORT}
+
+  guests-update:
+    image: ${PROJECT_NAME}-fnc-guests-update:latest
+    env_file:
+      - .env
+    expose:
+      - "${FNC_DEFAULT_PORT}"
+    environment:
+      - PORT=${FNC_DEFAULT_PORT}
+
+  guests-delete:
+    image: ${PROJECT_NAME}-fnc-guests-delete:latest
+    profiles:
+      - standard
+    env_file:
+      - .env
+    expose:
+      - "${FNC_DEFAULT_PORT}"
+    environment:
+      - PORT=${FNC_DEFAULT_PORT}
+
+  accounts-insert:
+    image: ${PROJECT_NAME}-fnc-accounts-insert:latest
+    profiles:
+      - standard
+    env_file:
+      - .env
+    expose:
+      - "${FNC_DEFAULT_PORT}"
+    environment:
+      - PORT=${FNC_DEFAULT_PORT}
+
+  accounts-update:
+    image: ${PROJECT_NAME}-fnc-accounts-update:latest
+    profiles:
+      - standard
+    env_file:
+      - .env
+    expose:
+      - "${FNC_DEFAULT_PORT}"
+    environment:
+      - PORT=${FNC_DEFAULT_PORT}
+
+  nginx:
+    image: nginx:stable-alpine
+    profiles:
+      - standard
+    env_file:
+      - .env
+    volumes:
+      - ./nginx-conf/fnc.conf.template:/etc/nginx/templates/fnc.conf.template
+    ports:
+      - "${ROUTE_FNC_PORT}:${ROUTE_FNC_PORT}"
