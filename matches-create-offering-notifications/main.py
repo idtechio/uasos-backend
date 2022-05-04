@@ -203,14 +203,24 @@ def create_sms_payload(phone_num, body):
     }
 
 
-def query_acceptance_url(matches_id, accept_value, side):
+def query_acceptance_url(matches_id, listing_id):
+    # https://example.org/matches/accept/{matches_id}?listing_id={listing_id}
     template_url = configuration_context["MATCH_ACCEPTANCE_URL_TEMPLATE"]
     return template_url.format(
-        matches_id=matches_id, accept_value=accept_value.value, side=side.value
+        matches_id=matches_id, listing_id=listing_id
+    )
+
+
+def query_rejection_url(matches_id, listing_id):
+    # https://example.org/matches/reject/{matches_id}?listing_id={listing_id}
+    template_url = configuration_context["MATCH_REJECTION_URL_TEMPLATE"]
+    return template_url.format(
+        matches_id=matches_id, listing_id=listing_id
     )
 
 
 def query_listing_delete_url(listing_email, listing_id, side):
+    # https://example.org/{side}/delete/{listing_email}?listing_id={listing_id}
     template_url = configuration_context["LISTING_DELETE_URL_TEMPLATE"]
     return template_url.format(
         listing_email=listing_email, listing_id=listing_id, side=side.value
@@ -236,10 +246,10 @@ def create_payload_for_guest_get_match_template(matches_id, host_row, guest_row)
         "handicapped_allowed": translate_complication(host_row["ok_for_disabilities"], preferred_lang),
         "pet_allowed": translate_complication(host_row["ok_for_animals"], preferred_lang),
         "url_accept": query_acceptance_url(
-            matches_id, MatchAcceptanceDecision.ACCEPTED, MatchAcceptanceSide.GUEST
+            matches_id, guest_row["db_guests_id"]
         ),
-        "url_reject": query_acceptance_url(
-            matches_id, MatchAcceptanceDecision.REJECTED, MatchAcceptanceSide.GUEST
+        "url_reject": query_rejection_url(
+            matches_id, guest_row["db_guests_id"]
         ),
         "url_listing_delete": query_listing_delete_url(
             guest_row["email"], guest_row["db_guests_id"], MatchAcceptanceSide.GUEST
@@ -274,10 +284,10 @@ def create_payload_for_host_get_match_template(matches_id, guest_row, host_row):
         "guest_elderly": translate_complication(guest_row["is_with_elderly"], preferred_lang),
         "guest_pets": translate_complication(guest_row["is_with_animal"], preferred_lang),
         "url_accept": query_acceptance_url(
-            matches_id, MatchAcceptanceDecision.ACCEPTED, MatchAcceptanceSide.HOST
+            matches_id, host_row["db_hosts_id"]
         ),
-        "url_reject": query_acceptance_url(
-            matches_id, MatchAcceptanceDecision.REJECTED, MatchAcceptanceSide.HOST
+        "url_reject": query_rejection_url(
+            matches_id, host_row["db_hosts_id"]
         ),
         "url_listing_delete": query_listing_delete_url(
             host_row["email"], host_row["db_hosts_id"], MatchAcceptanceSide.HOST
