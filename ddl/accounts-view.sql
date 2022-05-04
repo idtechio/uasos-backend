@@ -21,4 +21,5 @@ SELECT
     END AS phone_status
     ,preferred_lang
     ,sms_notification
+    ,identity_verified
 FROM accounts;

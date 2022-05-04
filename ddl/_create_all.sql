@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     ,fnc_msisdn_status VARCHAR
     ,preferred_lang VARCHAR
     ,sms_notification VARCHAR
+    ,identity_verified VARCHAR
 );
 
 CREATE UNIQUE INDEX accounts_uid_uindex
@@ -38,6 +39,7 @@ SELECT
     END AS phone_status
     ,preferred_lang
     ,sms_notification
+    ,identity_verified
 FROM accounts;
 
 
