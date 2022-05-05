@@ -1,0 +1,30 @@
+staticValues:
+    'groupRelations':
+        'single_man': Одинокий
+        'single_woman': Одинокая
+        'spouses': Супруги
+        'mother_with_children': 'Мама с детьми'
+        'family_with_children': 'Семья с детьми'
+        'unrelated_group': 'Несвязанная группа'
+    'accommodationTypes':
+        'bed': 'Кровать в общей комнате'
+        'room': 'Комната в коммунальной квартире/доме'
+        'flat': Квартира
+        'house': Дом
+        'public_shared_space': 'Коллективная комната (например, школьная комната)'
+    'boolean':
+        'yes': да
+        'no': нет
+messaging:
+    'sms':
+        'offeringNotification': ''
+        'sealedNotification': ''
+common:
+    'nationalities':
+        'ukrainian': ''
+        'nonUkrainian': ''
+sendgrid:
+    'HostGetsMatch': ''
+    'GuestGetsMatch': ''
+    'GUESTANDHOSTMATCHCONFIRM': ''
+    'MatchTimeout': d-658338f170e3448bb72237d3620843fd
