@@ -252,5 +252,3 @@ def postgres_process_timeout(pubsub_msg):
                                         db_conn=conn)
 
 # endregion
-
-# This is end of file. Testing (3)
