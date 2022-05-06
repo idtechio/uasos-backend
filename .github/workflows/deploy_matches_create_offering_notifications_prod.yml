@@ -28,14 +28,14 @@ jobs:
         entry_point: 'fnc_target'
         memory_mb: '1024'
         region: 'europe-central2'
-        env_vars: 'ACCOUNTS_TABLE_NAME=accounts,DB_CONNECTION_NAME=ukrn-hlpr:europe-central2:sql-hlpr-prd-db,GUESTS_TABLE_NAME=guests,HOSTS_TABLE_NAME=hosts,MATCHES_TABLE_NAME=matches,PROJECT_ID=ukrn-hlpr,SECRET_CONFIGURATION_CONTEXT=FUNCTIONS_CONFIGURATION_CONTEXT,SEND_EMAIL_TOPIC=email,SEND_SMS_TOPIC=sms'
+        env_vars: 'ACCOUNTS_TABLE_NAME=accounts,DB_CONNECTION_NAME=${{secrets.PROD_PROJECT_ID}}:europe-central2:sql-hlpr-prd-db,GUESTS_TABLE_NAME=guests,HOSTS_TABLE_NAME=hosts,MATCHES_TABLE_NAME=matches,PROJECT_ID=${{secrets.PROD_PROJECT_ID}},SECRET_CONFIGURATION_CONTEXT=FUNCTIONS_CONFIGURATION_CONTEXT,SEND_EMAIL_TOPIC=email,SEND_SMS_TOPIC=sms'
         source_dir: 'matches-create-offering-notifications'
         project_id: ${{secrets.PROD_PROJECT_ID}}
         ingress_settings: 'ALLOW_ALL'
-        service_account_email: 'gcf-sa@ukrn-hlpr.iam.gserviceaccount.com'
+        service_account_email: 'gcf-sa@${{secrets.PROD_PROJECT_ID}}.iam.gserviceaccount.com'
         timeout: '540'
         event_trigger_type: 'google.pubsub.topic.publish'
-        event_trigger_resource: 'projects/ukrn-hlpr/topics/matches-create-offering-notifications'
+        event_trigger_resource: 'projects/${{secrets.PROD_PROJECT_ID}}/topics/matches-create-offering-notifications'
 
 
 
