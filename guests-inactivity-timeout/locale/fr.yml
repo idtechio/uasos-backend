@@ -1,0 +1,30 @@
+staticValues:
+    'groupRelations':
+        'single_man': 'Homme célibataire'
+        'single_woman': 'Femme célibataire'
+        'spouses': Époux/Couple
+        'mother_with_children': 'Mère avec enfants'
+        'family_with_children': 'Famille avec enfants'
+        'unrelated_group': 'Groupe non-apparenté'
+    'accommodationTypes':
+        'bed': 'Lit dans une chambre partagée'
+        'room': 'Chambre dans un appartement ou une maison en colocation'
+        'flat': 'Appartement à usage exclusif'
+        'house': 'Maison à usage exclusif'
+        'public_shared_space': 'Salle collective (p. ex. salle d’école)'
+    'boolean':
+        'yes': Oui
+        'no': Non
+messaging:
+    'sms':
+        'offeringNotification': 'Nous avons un contact pour vous ! Vérifiez votre e-mail et confirmez.'
+        'sealedNotification': 'Nous avons un contact pour vous ! Vérifiez votre e-mail et confirmez.'
+common:
+    'nationalities':
+        'ukrainian': Ukrainien
+        'nonUkrainian': Non-ukrainien
+sendgrid:
+    'HostGetsMatch': ''
+    'GuestGetsMatch': ''
+    'GUESTANDHOSTMATCHCONFIRM': ''
+    'MatchTimeout': ''

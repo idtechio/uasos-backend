@@ -1,0 +1,30 @@
+staticValues:
+    'groupRelations':
+        'single_man': 'Mężczyzna (sam)'
+        'single_woman': 'Kobieta (sama)'
+        'spouses': Małżonkowie/Para
+        'mother_with_children': 'Matka z dziećmi'
+        'family_with_children': 'Rodzina z dziećmi'
+        'unrelated_group': 'Niepowiązana grupa'
+    'accommodationTypes':
+        'bed': 'Łóżko we współdzielonym pokoju'
+        'room': 'Pokój we współdzielonym mieszkaniu/domu'
+        'flat': 'Mieszkanie na wyłączność'
+        'house': 'Dom na wyłączność'
+        'public_shared_space': 'Pokój zbiorowy (np. szkolna sala)'
+    'boolean':
+        'yes': tak
+        'no': nie
+messaging:
+    'sms':
+        'offeringNotification': 'Znaleźliśmy Twój kontakt. Zaakceptuj/odrzuć na uasos.org lub na mailu.'
+        'sealedNotification': 'Mamy dla Ciebie kontakt! Sprawdź swoją skrzynkę e-mail i potwierdź.'
+common:
+    'nationalities':
+        'ukrainian': Ukraińska
+        'nonUkrainian': 'Inna niż Ukraińska'
+sendgrid:
+    'HostGetsMatch': d-3ca6f12b406b4858a6f6c1e6d2b134ee
+    'GuestGetsMatch': d-fc675a4d49384ea297223df70dfbc872
+    'GUESTANDHOSTMATCHCONFIRM': d-9df1fd3b02214ccebd447849e22effd2
+    'MatchTimeout': d-bf41b42ca1c842639b4f0e93a8175d8d
