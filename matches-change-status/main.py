@@ -115,17 +115,27 @@ def fnc_target(event, context):
     if "is_host" not in pubsub_msg or pubsub_msg["is_host"] is None:
         raise RuntimeError('message is missing required field "is_host"!')
 
+    if "matches_id" not in pubsub_msg or pubsub_msg["matches_id"] is None:
+        raise RuntimeError('message is missing required field "matches_id"!')
+
+    if "listing_id" not in pubsub_msg or pubsub_msg["listing_id"] is None:
+        raise RuntimeError('message is missing required field "listing_id"!')
+
+    if "accepted" not in pubsub_msg or pubsub_msg["accepted"] is None:
+        raise RuntimeError('message is missing required field "accepted"!')
+
     postgres_change_status(pubsub_msg)
 # endregion
 
 
 # region data mutation services
-def change_host_status(matches_id, target_status):
+def change_host_status(matches_id, listing_id, target_status):
     tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
 
     upd = (
         tbl_matches.update()
         .where(tbl_matches.c.db_matches_id == matches_id)
+        .where(tbl_matches.c.db_hosts_id == listing_id)
         .where(tbl_matches.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
         .values(fnc_host_status=target_status)
     )
@@ -134,12 +144,13 @@ def change_host_status(matches_id, target_status):
         conn.execute(upd)
 
 
-def change_guest_status(matches_id, target_status):
+def change_guest_status(matches_id, listing_id, target_status):
     tbl_matches = create_table_mapping(db_pool=db, db_table_name=os.environ["MATCHES_TABLE_NAME"])
 
     upd = (
         tbl_matches.update()
         .where(tbl_matches.c.db_matches_id == matches_id)
+        .where(tbl_matches.c.db_guests_id == listing_id)
         .where(tbl_matches.c.fnc_status == MatchesStatus.FNC_AWAITING_RESPONSE)
         .values(fnc_guest_status=target_status)
     )
@@ -150,13 +161,14 @@ def change_guest_status(matches_id, target_status):
 
 def postgres_change_status(pubsub_msg):
     matches_id = pubsub_msg["matches_id"]
+    listing_id = pubsub_msg["listing_id"]
 
     target_status = query_status(pubsub_msg)
 
     if target_status != MatchesStatus.DEFAULT:
         if pubsub_msg["is_host"]:
-            change_host_status(matches_id, target_status)
+            change_host_status(matches_id, listing_id, target_status)
         else:
-            change_guest_status(matches_id, target_status)
+            change_guest_status(matches_id, listing_id, target_status)
 
 # endregion

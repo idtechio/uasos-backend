@@ -135,13 +135,6 @@ def create_email_payload(template_id, context, to_emails):
     }
 
 
-def query_acceptance_url(matches_id, accept_value, side):
-    template_url = configuration_context["MATCH_ACCEPTANCE_URL_TEMPLATE"]
-    return template_url.format(
-        matches_id=matches_id, accept_value=accept_value.value, side=side.value
-    )
-
-
 def create_payload_for_match_timeout_template(
     row, to_emails, preferred_lang
 ):
