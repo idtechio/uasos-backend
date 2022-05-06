@@ -174,10 +174,10 @@ def fnc_target(event, context):
     else:
         pubsub_msg = json.loads(event["data"])
 
-    if 'db_guests_id' not in pubsub_msg:
-        raise RuntimeError(f'Provided message "{pubsub_msg}" does not contain expected field "db_guests_id"')
+    # if 'db_guests_id' not in pubsub_msg:
+    #     raise RuntimeError(f'Provided message "{pubsub_msg}" does not contain expected field "db_guests_id"')
 
-    postgres_process_timeout(pubsub_msg)
+    postgres_process_timeout()
 # endregion
 
 
@@ -216,7 +216,7 @@ def change_guests_status(db_guests_id, target_status, db_conn):
     print(f"changed status of db_guests_id={db_guests_id} to fnc_status={target_status} with result={result}")
 
 
-def postgres_process_timeout(pubsub_msg):
+def postgres_process_timeout():
     tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
 
     sel_guests = (
