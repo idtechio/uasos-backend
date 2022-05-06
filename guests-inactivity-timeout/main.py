@@ -174,6 +174,7 @@ def fnc_target(event, context):
     else:
         pubsub_msg = json.loads(event["data"])
 
+    print("fnc_target postgres_process_timeout")
     # if 'db_guests_id' not in pubsub_msg:
     #     raise RuntimeError(f'Provided message "{pubsub_msg}" does not contain expected field "db_guests_id"')
 
@@ -217,8 +218,10 @@ def change_guests_status(db_guests_id, target_status, db_conn):
 
 
 def postgres_process_timeout():
+    print("postgres_process_timeout: tbl_guests")
     tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
 
+    print("postgres_process_timeout: sel_guests")
     sel_guests = (
         tbl_guests.select()
             .where(tbl_guests.c.fnc_status == HostsGuestsStatus.MOD_ACCEPTED)
