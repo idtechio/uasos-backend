@@ -17,7 +17,7 @@ from sqlalchemy import func
 from google.cloud import secretmanager
 from dotenv import load_dotenv
 
-DEBUG = False  # FIXME :)
+DEBUG = False
 current_iteration = datetime.datetime.now()
 
 # IMPORTANT Order of values must be ascending!!!!
@@ -195,9 +195,10 @@ def evaluate_pair(host: HostListing, guest: GuestListing, recent_matches, rid_pa
     score = 0.79
 
     # -> Transport included
-    score += 0.01 * int(host.transport_included)
+    if host.transport_included.lower() == 'true':
+        score += 0.01
 
-    # -> Boosters for host and guest activity related to response rate for previous offers #FIXME Optimize execution (otherwise function invocations may time out)
+    # -> Boosters for host and guest activity related to response rate for previous offers
     # Calculate activity score
     host_activity_boost = 0
     guest_activity_boost = 0
@@ -291,7 +292,6 @@ def query_list(input_text):
 
 
 def query_string(input_text):
-    # FIXME Should strings be kept in DB as {str}, with parenthesis
     return input_text.strip("{ }")
 
 
@@ -302,14 +302,6 @@ def epoch_with_milliseconds_to_datetime(input):
 def age_in_hours(t: datetime.datetime):
     n = datetime.datetime.now()
     return (n - t).days * 24 + int((n - t).seconds / 3600)
-
-
-def default_value(value: str, default: str):
-    # FIXME: null to poland should be set in service writing to DB
-    if value is None:
-        return default
-    else:
-        return value
 
 
 def query_epoch_with_milliseconds():
@@ -404,7 +396,7 @@ def create_matching(pubsub_msg):
                         registration_date=epoch_with_milliseconds_to_datetime(
                             row["db_ts_registered"]
                         ),
-                        country=default_value(row["country"], "poland"),
+                        country=row["country"],
                         closest_city=row["closest_city"],
                         shelter_type=query_string(row["shelter_type"]),
                         beds=int(row["beds"]),
@@ -429,7 +421,7 @@ def create_matching(pubsub_msg):
                         duration_category=DURATION_CATEGORIES.index(
                             query_string(row["duration_category"])
                         ),
-                        transport_included=False,  # FIXME: placeholder
+                        transport_included=row["transport_included"],
                     )
                 )
                 # print(f"added to HOSTS list {row['db_hosts_id']}")
@@ -471,7 +463,7 @@ def create_matching(pubsub_msg):
                         registration_date=epoch_with_milliseconds_to_datetime(
                             row["db_ts_registered"]
                         ),
-                        country=default_value(row["country"], "poland"),
+                        country=row["country"],
                         city=row["city"],
                         beds=int(row["beds"]),
                         is_pregnant=True if row["is_pregnant"] == "TRUE" else False,
@@ -577,12 +569,10 @@ def create_matching(pubsub_msg):
 
             # region Update col fnc_status in tbl hosts
 
-            matched_hosts_set = {host.rid for host, guest in matches}
+            matched_hosts_rids_set = {host.rid for host, guest in matches}
             hosts_rids_set = set(element.rid for element in hosts)
-            # Hosts with match 
-            hosts_rids_set_matched_hosts_set_intersection = hosts_rids_set & matched_hosts_set #FIXME TBH we could probably use matched_hosts_set without this operation - no time to check, so i'm leaving it as is
             # Hosts without a match
-            hosts_rids_set_matched_hosts_set_difference = hosts_rids_set - matched_hosts_set
+            hosts_rids_set_matched_hosts_rids_set_difference = hosts_rids_set - matched_hosts_rids_set
             
             tbl_hosts = create_table_mapping(db_pool=db, db_table_name=os.environ["HOSTS_TABLE_NAME"])
 
@@ -591,7 +581,7 @@ def create_matching(pubsub_msg):
                 tbl=tbl_hosts,
                 target_status=HostsGuestsStatus.FNC_MATCHED,
                 id_col_name='db_hosts_id',
-                ids=hosts_rids_set_matched_hosts_set_intersection,
+                ids=matched_hosts_rids_set,
             )
 
             update_status_bulk(
@@ -599,19 +589,17 @@ def create_matching(pubsub_msg):
                 tbl=tbl_hosts,
                 target_status=HostsGuestsStatus.MOD_ACCEPTED,
                 id_col_name='db_hosts_id',
-                ids=hosts_rids_set_matched_hosts_set_difference,
+                ids=hosts_rids_set_matched_hosts_rids_set_difference,
             )
 
             # endregion
 
             # region Update col fnc_status in tbl guests
 
-            matched_guests_set = {guest.rid for host, guest in matches}
+            matched_guests_rids_set = {guest.rid for host, guest in matches}
             guests_rids_set = set(element.rid for element in guests)
-            # Guests with match 
-            guests_rids_set_matched_guests_set_intersection = guests_rids_set & matched_guests_set #FIXME TBH we could probably use matched_guests_set without this operation - no time to check, so i'm leaving it as is
             # Guests without a match
-            guests_rids_set_matched_guests_set_difference = guests_rids_set - matched_guests_set
+            guests_rids_set_matched_guests_rids_set_difference = guests_rids_set - matched_guests_rids_set
             
             tbl_guests = create_table_mapping(db_pool=db, db_table_name=os.environ["GUESTS_TABLE_NAME"])
 
@@ -620,7 +608,7 @@ def create_matching(pubsub_msg):
                 tbl=tbl_guests,
                 target_status=HostsGuestsStatus.FNC_MATCHED,
                 id_col_name='db_guests_id',
-                ids=guests_rids_set_matched_guests_set_intersection,
+                ids=matched_guests_rids_set,
             )
 
             update_status_bulk(
@@ -628,7 +616,7 @@ def create_matching(pubsub_msg):
                 tbl=tbl_guests,
                 target_status=HostsGuestsStatus.MOD_ACCEPTED,
                 id_col_name='db_guests_id',
-                ids=guests_rids_set_matched_guests_set_difference,
+                ids=guests_rids_set_matched_guests_rids_set_difference,
             )
 
             # endregion

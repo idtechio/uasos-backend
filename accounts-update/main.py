@@ -17,7 +17,7 @@ def query_configuration_context(secret_id):
     )
     response = client.access_secret_version(request={"name": secret_name})
     secret_value = response.payload.data.decode("UTF-8")
-    configuration_context = json.loads(secret_value)  # FIXME: shadows the outer scope in purpose
+    configuration_context = json.loads(secret_value)
     return configuration_context
 
 

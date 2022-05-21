@@ -16,7 +16,7 @@ from sqlalchemy.dialects.postgresql import *
 from google.cloud import secretmanager
 from dotenv import load_dotenv
 
-DEBUG = True  # FIXME :)
+DEBUG = False
 current_iteration = datetime.datetime.now()
 
 # IMPORTANT Order of values must be ascending!!!!

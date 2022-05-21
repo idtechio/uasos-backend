@@ -7,7 +7,7 @@ from google.cloud import secretmanager
 from twilio.base.exceptions import TwilioRestException
 from twilio.rest import Client as TwilioClient
 
-DEBUG = True  # FIXME :)
+DEBUG = False
 
 # region configuration context
 # Load local .env if not on GCP
