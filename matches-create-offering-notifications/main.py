@@ -6,7 +6,7 @@ import base64
 import json
 import time
 
-from enum import Enum
+from enum import Enum, Flag
 
 from sqlalchemy import create_engine
 from sqlalchemy import Table
@@ -121,9 +121,9 @@ class HostsGuestsStatus(Enum):
     MATCH_ACCEPTED = "095"
 
 
-class MatchAcceptanceDecision(Enum):
-    ACCEPTED = "1"
-    REJECTED = "0"
+class MatchAcceptanceDecision(Flag):
+    ACCEPTED = True
+    REJECTED = False
 
 
 class MatchAcceptanceSide(Enum):
@@ -203,10 +203,15 @@ def create_sms_payload(phone_num, body):
     }
 
 
-def query_acceptance_url(matches_id, accept_value, side):
+def query_acceptance_url(is_accepted, matches_id, listing_id):
     template_url = configuration_context["MATCH_ACCEPTANCE_URL_TEMPLATE"]
+    if is_accepted:
+        template_url = configuration_context["MATCH_ACCEPTANCE_URL_TEMPLATE"]
+    else:
+        template_url = configuration_context["MATCH_REJECTION_URL_TEMPLATE"]
+
     return template_url.format(
-        matches_id=matches_id, accept_value=accept_value.value, side=side.value
+        matches_id=matches_id, listing_id=listing_id
     )
 
 
@@ -236,10 +241,10 @@ def create_payload_for_guest_get_match_template(matches_id, host_row, guest_row)
         "handicapped_allowed": translate_complication(host_row["ok_for_disabilities"], preferred_lang),
         "pet_allowed": translate_complication(host_row["ok_for_animals"], preferred_lang),
         "url_accept": query_acceptance_url(
-            matches_id, MatchAcceptanceDecision.ACCEPTED, MatchAcceptanceSide.GUEST
+            is_accepted=MatchAcceptanceDecision.ACCEPTED, matches_id=matches_id, listing_id=guest_row["db_guests_id"]
         ),
         "url_reject": query_acceptance_url(
-            matches_id, MatchAcceptanceDecision.REJECTED, MatchAcceptanceSide.GUEST
+            is_accepted=MatchAcceptanceDecision.REJECTED, matches_id=matches_id, listing_id=guest_row["db_guests_id"]
         ),
         "url_listing_delete": query_listing_delete_url(
             guest_row["email"], guest_row["db_guests_id"], MatchAcceptanceSide.GUEST
@@ -274,10 +279,10 @@ def create_payload_for_host_get_match_template(matches_id, guest_row, host_row):
         "guest_elderly": translate_complication(guest_row["is_with_elderly"], preferred_lang),
         "guest_pets": translate_complication(guest_row["is_with_animal"], preferred_lang),
         "url_accept": query_acceptance_url(
-            matches_id, MatchAcceptanceDecision.ACCEPTED, MatchAcceptanceSide.HOST
+            is_accepted=MatchAcceptanceDecision.ACCEPTED, matches_id=matches_id, listing_id=host_row["db_hosts_id"]
         ),
         "url_reject": query_acceptance_url(
-            matches_id, MatchAcceptanceDecision.REJECTED, MatchAcceptanceSide.HOST
+            is_accepted=MatchAcceptanceDecision.REJECTED, matches_id=matches_id, listing_id=host_row["db_hosts_id"]
         ),
         "url_listing_delete": query_listing_delete_url(
             host_row["email"], host_row["db_hosts_id"], MatchAcceptanceSide.HOST
