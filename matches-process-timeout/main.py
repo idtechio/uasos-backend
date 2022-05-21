@@ -304,7 +304,7 @@ def postgres_process_timeout(pubsub_msg):
                         for host_row in result:
                             message_for_host = (
                                 create_payload_for_match_timeout_template(
-                                    row=host_row, # FIXME clean up
+                                    row=host_row,
                                     to_emails=create_to_email_element(
                                         host_row["name"], host_row["email"]
                                     ),
@@ -345,5 +345,3 @@ def postgres_process_timeout(pubsub_msg):
                                                  db_conn=conn)
 
 # endregion
-
-# This is end of file. Testing (3)
